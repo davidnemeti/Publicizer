@@ -16,7 +16,7 @@ public class PublicizerSourceGenerator : ISourceGenerator
 {
     public void Execute(GeneratorExecutionContext context)
     {
-        var publicizerSyntaxContextReceiver = (PublicizerSyntaxContextReceiver)context.SyntaxContextReceiver;
+        var publicizerSyntaxContextReceiver = (PublicizerSyntaxContextReceiver)context.SyntaxContextReceiver!;
 
         foreach (var (forwarderTypeSymbol, forwarderAttributeDatas) in publicizerSyntaxContextReceiver.Forwarders)
         {
@@ -31,8 +31,8 @@ public class PublicizerSourceGenerator : ISourceGenerator
         using (var stringWriter = new StringWriter())
         using (var indentedWriter = new IndentedTextWriter(stringWriter))
         {
-            var typeSymbolToPublicize = (INamedTypeSymbol)forwarderAttributeData.ConstructorArguments[0].Value;
-            var generationKind = (GenerationKind)forwarderAttributeData.ConstructorArguments[1].Value;
+            var typeSymbolToPublicize = (INamedTypeSymbol)forwarderAttributeData.ConstructorArguments[0].Value!;
+            var generationKind = (GenerationKind)forwarderAttributeData.ConstructorArguments[1].Value!;
 
             if (forwarderTypeSymbol.ContainingNamespace is { IsGlobalNamespace: false } @namespace)
             {

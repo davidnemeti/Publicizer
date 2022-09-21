@@ -28,6 +28,7 @@ public class PublicizerSyntaxContextReceiver : ISyntaxContextReceiver
             .ToArray();
 
     private bool IsPublicizeAttribute(AttributeData attributeData) =>
+        attributeData.AttributeClass != null &&
         attributeData.AttributeClass.Name == typeof(PublicizeAttribute).Name &&
         attributeData.AttributeClass.ContainingNamespace.Name == typeof(PublicizeAttribute).Namespace;
 }
