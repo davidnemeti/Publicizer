@@ -18,41 +18,41 @@ public class PublicizerSourceGenerator : ISourceGenerator
     {
         var publicizerSyntaxContextReceiver = (PublicizerSyntaxContextReceiver)context.SyntaxContextReceiver!;
 
-        foreach (var (forwarderTypeSymbol, forwarderAttributeDatas) in publicizerSyntaxContextReceiver.Forwarders)
+        foreach (var (proxyTypeSymbol, publicizeAttributeDatas) in publicizerSyntaxContextReceiver.Proxies)
         {
-            var forwarderAttributeData = forwarderAttributeDatas.Single();
+            var publicizeAttributeData = publicizeAttributeDatas.Single();
 
-            context.AddSource($"{forwarderTypeSymbol.Name}.g.cs", SourceText.From(GenerateSource(forwarderTypeSymbol, forwarderAttributeData), Encoding.UTF8));
+            context.AddSource($"{proxyTypeSymbol.Name}.g.cs", SourceText.From(GenerateSource(proxyTypeSymbol, publicizeAttributeData), Encoding.UTF8));
         }
     }
 
-    private string GenerateSource(INamedTypeSymbol forwarderTypeSymbol, AttributeData forwarderAttributeData)
+    private string GenerateSource(INamedTypeSymbol proxyTypeSymbol, AttributeData publicizeAttributeData)
     {
         using (var stringWriter = new StringWriter())
         using (var indentedWriter = new IndentedTextWriter(stringWriter))
         {
-            var typeSymbolToPublicize = (INamedTypeSymbol)forwarderAttributeData.ConstructorArguments[0].Value!;
-            var generationKind = (GenerationKind)forwarderAttributeData.ConstructorArguments[1].Value!;
+            var typeSymbolToPublicize = (INamedTypeSymbol)publicizeAttributeData.ConstructorArguments[0].Value!;
+            var generationKind = (GenerationKind)publicizeAttributeData.ConstructorArguments[1].Value!;
 
-            if (forwarderTypeSymbol.ContainingNamespace is { IsGlobalNamespace: false } @namespace)
+            if (proxyTypeSymbol.ContainingNamespace is { IsGlobalNamespace: false } @namespace)
             {
                 indentedWriter.WriteLine($"namespace {@namespace}");
                 indentedWriter.WriteLine("{");
                 indentedWriter.Indent++;
-                GenerateForwarding(indentedWriter, forwarderTypeSymbol, typeSymbolToPublicize, generationKind);
+                GenerateForwarding(indentedWriter, proxyTypeSymbol, typeSymbolToPublicize, generationKind);
                 indentedWriter.Indent--;
                 indentedWriter.WriteLine("}");
             }
             else
-                GenerateForwarding(indentedWriter, forwarderTypeSymbol, typeSymbolToPublicize, generationKind);
+                GenerateForwarding(indentedWriter, proxyTypeSymbol, typeSymbolToPublicize, generationKind);
 
             return stringWriter.ToString();
         }
     }
 
-    private void GenerateForwarding(IndentedTextWriter indentedWriter, INamedTypeSymbol forwarderTypeSymbol, INamedTypeSymbol typeSymbolToPublicize, GenerationKind generationKind)
+    private void GenerateForwarding(IndentedTextWriter indentedWriter, INamedTypeSymbol proxyTypeSymbol, INamedTypeSymbol typeSymbolToPublicize, GenerationKind generationKind)
     {
-        indentedWriter.WriteLine($"public partial class {forwarderTypeSymbol.Name}");
+        indentedWriter.WriteLine($"public partial class {proxyTypeSymbol.Name}");
         indentedWriter.WriteLine("{");
         indentedWriter.Indent++;
 
@@ -64,7 +64,7 @@ public class PublicizerSourceGenerator : ISourceGenerator
             indentedWriter.WriteLine($"private readonly {typeFullNameToPublicize} {instanceName};");
             indentedWriter.WriteLine();
 
-            indentedWriter.WriteLine($"public {forwarderTypeSymbol.Name}({typeFullNameToPublicize} {instanceName})");
+            indentedWriter.WriteLine($"public {proxyTypeSymbol.Name}({typeFullNameToPublicize} {instanceName})");
             indentedWriter.WriteLine("{");
             indentedWriter.Indent++;
             indentedWriter.WriteLine($"this.{instanceName} = {instanceName};");

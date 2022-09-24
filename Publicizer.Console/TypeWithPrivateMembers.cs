@@ -1,11 +1,12 @@
 ﻿using NamespaceForOtherTypes;
-using System.Reflection;
 
 namespace NamespaceForTypeWithPrivateMembers;
 
 public class TypeWithPrivateMembers
 {
+#pragma warning disable CS0414 // The field 'TypeWithPrivateMembers.StaticField' is assigned but its value is never used
     private static int StaticField = 3;
+#pragma warning restore CS0414 // The field 'TypeWithPrivateMembers.StaticField' is assigned but its value is never used
     private static int StaticReadonlyProperty { get; } = 5;
     private static int StaticProperty { get; set; } = 8;
 

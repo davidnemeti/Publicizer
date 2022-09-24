@@ -7,9 +7,9 @@ namespace Publicizer;
 
 public class PublicizerSyntaxContextReceiver : ISyntaxContextReceiver
 {
-    private List<(INamedTypeSymbol, IReadOnlyList<AttributeData>)> _forwarders = new ();
+    private List<(INamedTypeSymbol, IReadOnlyList<AttributeData>)> _proxies = new ();
 
-    public IReadOnlyList<(INamedTypeSymbol, IReadOnlyList<AttributeData>)> Forwarders => _forwarders;
+    public IReadOnlyList<(INamedTypeSymbol, IReadOnlyList<AttributeData>)> Proxies => _proxies;
 
     public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
     {
@@ -18,7 +18,7 @@ public class PublicizerSyntaxContextReceiver : ISyntaxContextReceiver
             GetPublicizeAttributes(namedTypeSymbol) is var attributeDatas &&
             attributeDatas.Count > 0)
         {
-            _forwarders.Add((namedTypeSymbol, attributeDatas));
+            _proxies.Add((namedTypeSymbol, attributeDatas));
         }
     }
 

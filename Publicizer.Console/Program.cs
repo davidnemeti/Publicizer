@@ -8,7 +8,7 @@ Console.WriteLine("Hello, World!");
 
 var instance = new TypeWithPrivateMembers();
 
-var forwarder = new ForwarderType(instance);
+var forwarder = new ProxyForTypeWithPrivateMembers(instance);
 
 Console.WriteLine($"_field = {forwarder._field}");
 forwarder._field = new OtherType(31);
@@ -28,16 +28,16 @@ forwarder.Procedure();
 forwarder.Procedure(15);
 forwarder.Procedure(15, new OtherType(77));
 
-Console.WriteLine($"StaticField = {StaticForwarderType.StaticField}");
-StaticForwarderType.StaticField++;
-Console.WriteLine($"StaticField = {StaticForwarderType.StaticField}");
+Console.WriteLine($"StaticField = {StaticProxyForTypeWithPrivateMembers.StaticField}");
+StaticProxyForTypeWithPrivateMembers.StaticField++;
+Console.WriteLine($"StaticField = {StaticProxyForTypeWithPrivateMembers.StaticField}");
 
-Console.WriteLine($"StaticProperty = {StaticForwarderType.StaticProperty}");
-StaticForwarderType.StaticProperty++;
-Console.WriteLine($"StaticProperty = {StaticForwarderType.StaticProperty}");
+Console.WriteLine($"StaticProperty = {StaticProxyForTypeWithPrivateMembers.StaticProperty}");
+StaticProxyForTypeWithPrivateMembers.StaticProperty++;
+Console.WriteLine($"StaticProperty = {StaticProxyForTypeWithPrivateMembers.StaticProperty}");
 
-Console.WriteLine($"StaticReadonlyProperty = {StaticForwarderType.StaticReadonlyProperty}");
+Console.WriteLine($"StaticReadonlyProperty = {StaticProxyForTypeWithPrivateMembers.StaticReadonlyProperty}");
 
-Console.WriteLine(StaticForwarderType.StaticFunction());
+Console.WriteLine(StaticProxyForTypeWithPrivateMembers.StaticFunction());
 
-StaticForwarderType.StaticProcedure();
+StaticProxyForTypeWithPrivateMembers.StaticProcedure();
