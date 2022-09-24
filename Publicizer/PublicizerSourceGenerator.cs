@@ -32,25 +32,26 @@ public class PublicizerSourceGenerator : ISourceGenerator
         using (var indentedWriter = new IndentedTextWriter(stringWriter))
         {
             var typeSymbolToPublicize = (INamedTypeSymbol)publicizeAttributeData.ConstructorArguments[0].Value!;
-            var generationKind = (GenerationKind)publicizeAttributeData.ConstructorArguments[1].Value!;
+            var memberLifetime = (MemberLifetime)publicizeAttributeData.ConstructorArguments[1].Value!;
+            var memberVisibility = (MemberVisibility)publicizeAttributeData.ConstructorArguments[2].Value!;
 
             if (proxyTypeSymbol.ContainingNamespace is { IsGlobalNamespace: false } @namespace)
             {
                 indentedWriter.WriteLine($"namespace {@namespace}");
                 indentedWriter.WriteLine("{");
                 indentedWriter.Indent++;
-                GenerateForwarding(indentedWriter, proxyTypeSymbol, typeSymbolToPublicize, generationKind);
+                GenerateForwarding(indentedWriter, proxyTypeSymbol, typeSymbolToPublicize, memberLifetime, memberVisibility);
                 indentedWriter.Indent--;
                 indentedWriter.WriteLine("}");
             }
             else
-                GenerateForwarding(indentedWriter, proxyTypeSymbol, typeSymbolToPublicize, generationKind);
+                GenerateForwarding(indentedWriter, proxyTypeSymbol, typeSymbolToPublicize, memberLifetime, memberVisibility);
 
             return stringWriter.ToString();
         }
     }
 
-    private void GenerateForwarding(IndentedTextWriter indentedWriter, INamedTypeSymbol proxyTypeSymbol, INamedTypeSymbol typeSymbolToPublicize, GenerationKind generationKind)
+    private void GenerateForwarding(IndentedTextWriter indentedWriter, INamedTypeSymbol proxyTypeSymbol, INamedTypeSymbol typeSymbolToPublicize, MemberLifetime memberLifetime, MemberVisibility memberVisibility)
     {
         indentedWriter.WriteLine($"public partial class {proxyTypeSymbol.Name}");
         indentedWriter.WriteLine("{");
@@ -59,7 +60,7 @@ public class PublicizerSourceGenerator : ISourceGenerator
         var instanceName = typeSymbolToPublicize.Name;
         var typeFullNameToPublicize = typeSymbolToPublicize.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
-        if (generationKind == GenerationKind.Instance)
+        if (memberLifetime.HasFlag(MemberLifetime.Instance))
         {
             indentedWriter.WriteLine($"private readonly {typeFullNameToPublicize} {instanceName};");
             indentedWriter.WriteLine();
@@ -80,8 +81,7 @@ public class PublicizerSourceGenerator : ISourceGenerator
 
         foreach (var memberSymbol in typeSymbolToPublicize.GetMembers())
         {
-            var generateStatic = generationKind == GenerationKind.Static;
-            if (generateStatic != memberSymbol.IsStatic)
+            if (!MatchMemberLifetime(memberSymbol, memberLifetime) || !MatchMemberVisibility(memberSymbol, memberVisibility))
                 continue;
 
             var instanceText = memberSymbol.IsStatic ? "null" : $"this.{instanceName}";
@@ -108,6 +108,14 @@ public class PublicizerSourceGenerator : ISourceGenerator
         indentedWriter.Indent--;
         indentedWriter.WriteLine("}");
     }
+
+    private static bool MatchMemberLifetime(ISymbol memberSymbol, MemberLifetime memberLifetime) =>
+        memberLifetime.HasFlag(MemberLifetime.Static) && memberSymbol.IsStatic ||
+        memberLifetime.HasFlag(MemberLifetime.Instance) && !memberSymbol.IsStatic;
+
+    private static bool MatchMemberVisibility(ISymbol memberSymbol, MemberVisibility memberVisibility) =>
+        memberVisibility.HasFlag(MemberVisibility.Public) && memberSymbol.DeclaredAccessibility == Accessibility.Public ||
+        memberVisibility.HasFlag(MemberVisibility.NonPublic) && memberSymbol.DeclaredAccessibility != Accessibility.Public;
 
     private void GenerateProperty(IndentedTextWriter indentedWriter, string instanceText, string typeFullNameToPublicize, IPropertySymbol propertySymbol)
     {

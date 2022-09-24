@@ -2,21 +2,17 @@
 
 namespace Publicizer;
 
-public enum GenerationKind
-{
-    Static,
-    Instance
-}
-
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
 public class PublicizeAttribute : Attribute
 {
     public Type TypeToPublicize { get; }
-    public GenerationKind GenerationKind { get; }
+    public MemberLifetime MemberLifetime { get; }
+    public MemberVisibility MemberVisibility { get; }
 
-    public PublicizeAttribute(Type typeToPublicize, GenerationKind generationKind)
+    public PublicizeAttribute(Type typeToPublicize, MemberLifetime memberLifetime = MemberLifetime.All, MemberVisibility memberVisibility = MemberVisibility.All)
     {
         TypeToPublicize = typeToPublicize;
-        GenerationKind = generationKind;
+        MemberLifetime = memberLifetime;
+        MemberVisibility = memberVisibility;
     }
 }
