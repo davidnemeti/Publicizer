@@ -1,13 +1,11 @@
-﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
-using System;
+﻿using System;
 using System.CodeDom.Compiler;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
-using System.Net.Mime;
 using System.Text;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
 
 namespace Publicizer;
 
@@ -31,44 +29,63 @@ public class PublicizerSourceGenerator : ISourceGenerator
         using (var stringWriter = new StringWriter())
         using (var indentedWriter = new IndentedTextWriter(stringWriter))
         {
+            indentedWriter.WriteLine("#nullable enable annotations");
+
             var typeSymbolToPublicize = (INamedTypeSymbol)publicizeAttributeData.ConstructorArguments[0].Value!;
             var memberLifetime = (MemberLifetime)publicizeAttributeData.ConstructorArguments[1].Value!;
             var memberVisibility = (MemberVisibility)publicizeAttributeData.ConstructorArguments[2].Value!;
+            var specialMemberAccessorTypeSymbol = (INamedTypeSymbol?) publicizeAttributeData.ConstructorArguments[3].Value;
 
             if (proxyTypeSymbol.ContainingNamespace is { IsGlobalNamespace: false } @namespace)
             {
                 indentedWriter.WriteLine($"namespace {@namespace}");
                 indentedWriter.WriteLine("{");
                 indentedWriter.Indent++;
-                GenerateForwarding(indentedWriter, proxyTypeSymbol, typeSymbolToPublicize, memberLifetime, memberVisibility);
+                GenerateForwarding(indentedWriter, proxyTypeSymbol, typeSymbolToPublicize, memberLifetime, memberVisibility, specialMemberAccessorTypeSymbol);
                 indentedWriter.Indent--;
                 indentedWriter.WriteLine("}");
             }
             else
-                GenerateForwarding(indentedWriter, proxyTypeSymbol, typeSymbolToPublicize, memberLifetime, memberVisibility);
+                GenerateForwarding(indentedWriter, proxyTypeSymbol, typeSymbolToPublicize, memberLifetime, memberVisibility, specialMemberAccessorTypeSymbol);
 
             return stringWriter.ToString();
         }
     }
 
-    private void GenerateForwarding(IndentedTextWriter indentedWriter, INamedTypeSymbol proxyTypeSymbol, INamedTypeSymbol typeSymbolToPublicize, MemberLifetime memberLifetime, MemberVisibility memberVisibility)
+    private void GenerateForwarding(IndentedTextWriter indentedWriter, INamedTypeSymbol proxyTypeSymbol, INamedTypeSymbol typeSymbolToPublicize, MemberLifetime memberLifetime, MemberVisibility memberVisibility, INamedTypeSymbol? specialMemberAccessorTypeSymbol)
     {
         indentedWriter.WriteLine($"public partial class {proxyTypeSymbol.Name}");
         indentedWriter.WriteLine("{");
         indentedWriter.Indent++;
 
-        var instanceName = typeSymbolToPublicize.Name;
-        var typeFullNameToPublicize = typeSymbolToPublicize.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        // NOTE: The name of the fields are choosen so we can avoid name collisions with the orginial type's members.
+        // In case of name collision, one can just simply change the name of the proxy type.
+        var instanceToPublicizeName = $"{proxyTypeSymbol.Name}_{typeSymbolToPublicize.Name}";
+        var memberAccessorInstanceText = $"{proxyTypeSymbol.Name}_{nameof(IMemberAccessor<object>)}";
+
+        var typeToPublicizeFullName = typeSymbolToPublicize.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        var memberAccessorStaticTypeText = $"global::Publicizer.{nameof(IMemberAccessor<object>)}<{typeToPublicizeFullName}>";
+
+        var memberAccessorDynamicTypeText = specialMemberAccessorTypeSymbol != null
+            ? specialMemberAccessorTypeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
+            : $"global::Publicizer.{nameof(ReflectionMemberAccessor<object>)}<{typeToPublicizeFullName}>";
+
+        var memberAccessorInstantiationText = $"new {memberAccessorDynamicTypeText}()";
+
+        indentedWriter.WriteLine($"private static readonly {memberAccessorStaticTypeText} {memberAccessorInstanceText} = {memberAccessorInstantiationText};");
+        indentedWriter.WriteLine();
 
         if (memberLifetime.HasFlag(MemberLifetime.Instance))
         {
-            indentedWriter.WriteLine($"private readonly {typeFullNameToPublicize} {instanceName};");
+            indentedWriter.WriteLine($"private readonly {typeToPublicizeFullName} {instanceToPublicizeName};");
             indentedWriter.WriteLine();
 
-            indentedWriter.WriteLine($"public {proxyTypeSymbol.Name}({typeFullNameToPublicize} {instanceName})");
+            const string instanceToPublicizeParameterName = "instanceToPublicize";
+
+            indentedWriter.WriteLine($"public {proxyTypeSymbol.Name}({typeToPublicizeFullName} {instanceToPublicizeParameterName})");
             indentedWriter.WriteLine("{");
             indentedWriter.Indent++;
-            indentedWriter.WriteLine($"this.{instanceName} = {instanceName};");
+            indentedWriter.WriteLine($"this.{instanceToPublicizeName} = {instanceToPublicizeParameterName};");
             indentedWriter.Indent--;
             indentedWriter.WriteLine("}");
         }
@@ -84,23 +101,23 @@ public class PublicizerSourceGenerator : ISourceGenerator
             if (!MatchMemberLifetime(memberSymbol, memberLifetime) || !MatchMemberVisibility(memberSymbol, memberVisibility))
                 continue;
 
-            var instanceText = memberSymbol.IsStatic ? "null" : $"this.{instanceName}";
+            var instanceText = memberSymbol.IsStatic ? "null" : $"this.{instanceToPublicizeName}";
 
             switch (memberSymbol)
             {
                 case IPropertySymbol propertySymbol:
                     indentedWriter.WriteLine();
-                    GenerateProperty(indentedWriter, instanceText, typeFullNameToPublicize, propertySymbol);
+                    GenerateProperty(indentedWriter, instanceText, memberAccessorInstanceText, propertySymbol, memberLifetime, memberVisibility);
                     break;
 
                 case IFieldSymbol fieldSymbol when !fieldSymbol.IsImplicitlyDeclared:
                     indentedWriter.WriteLine();
-                    GenerateField(indentedWriter, instanceText, typeFullNameToPublicize, fieldSymbol);
+                    GenerateField(indentedWriter, instanceText, memberAccessorInstanceText, fieldSymbol, memberLifetime, memberVisibility);
                     break;
 
                 case IMethodSymbol methodSymbol when !methodSymbol.IsImplicitlyDeclared && !methodSymbolsForProperties.Contains(methodSymbol):
                     indentedWriter.WriteLine();
-                    GenerateMethod(indentedWriter, instanceText, typeFullNameToPublicize, methodSymbol);
+                    GenerateMethod(indentedWriter, instanceText, memberAccessorInstanceText, methodSymbol, memberLifetime, memberVisibility);
                     break;
             }
         }
@@ -117,7 +134,7 @@ public class PublicizerSourceGenerator : ISourceGenerator
         memberVisibility.HasFlag(MemberVisibility.Public) && memberSymbol.DeclaredAccessibility == Accessibility.Public ||
         memberVisibility.HasFlag(MemberVisibility.NonPublic) && memberSymbol.DeclaredAccessibility != Accessibility.Public;
 
-    private void GenerateProperty(IndentedTextWriter indentedWriter, string instanceText, string typeFullNameToPublicize, IPropertySymbol propertySymbol)
+    private void GenerateProperty(IndentedTextWriter indentedWriter, string instanceText, string memberAccessorInstanceText, IPropertySymbol propertySymbol, MemberLifetime memberLifetime, MemberVisibility memberVisibility)
     {
         var propertyTypeFullName = propertySymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         var staticOrEmpty = propertySymbol.IsStatic ? "static " : string.Empty;
@@ -127,16 +144,16 @@ public class PublicizerSourceGenerator : ISourceGenerator
         indentedWriter.Indent++;
 
         if (propertySymbol.GetMethod is not null)
-            GenerateGetSet(indentedWriter, instanceText, typeFullNameToPublicize, propertySymbol, isGet: true);
+            GenerateGetSet(indentedWriter, instanceText, memberAccessorInstanceText, propertySymbol, isGet: true, memberLifetime, memberVisibility);
 
         if (propertySymbol.SetMethod is not null)
-            GenerateGetSet(indentedWriter, instanceText, typeFullNameToPublicize, propertySymbol, isGet: false);
+            GenerateGetSet(indentedWriter, instanceText, memberAccessorInstanceText, propertySymbol, isGet: false, memberLifetime, memberVisibility);
 
         indentedWriter.Indent--;
         indentedWriter.WriteLine("}");
     }
 
-    private void GenerateField(IndentedTextWriter indentedWriter, string instanceText, string typeFullNameToPublicize, IFieldSymbol fieldSymbol)
+    private void GenerateField(IndentedTextWriter indentedWriter, string instanceText, string memberAccessorInstanceText, IFieldSymbol fieldSymbol, MemberLifetime memberLifetime, MemberVisibility memberVisibility)
     {
         var fieldTypeFullName = fieldSymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         var staticOrEmpty = fieldSymbol.IsStatic ? "static " : string.Empty;
@@ -144,13 +161,13 @@ public class PublicizerSourceGenerator : ISourceGenerator
         indentedWriter.WriteLine($"public {staticOrEmpty}{fieldTypeFullName} {fieldSymbol.Name}");
         indentedWriter.WriteLine("{");
         indentedWriter.Indent++;
-        GenerateGetSet(indentedWriter, instanceText, typeFullNameToPublicize, fieldSymbol, isGet: true);
-        GenerateGetSet(indentedWriter, instanceText, typeFullNameToPublicize, fieldSymbol, isGet: false);
+        GenerateGetSet(indentedWriter, instanceText, memberAccessorInstanceText, fieldSymbol, isGet: true, memberLifetime, memberVisibility);
+        GenerateGetSet(indentedWriter, instanceText, memberAccessorInstanceText, fieldSymbol, isGet: false, memberLifetime, memberVisibility);
         indentedWriter.Indent--;
         indentedWriter.WriteLine("}");
     }
 
-    private void GenerateMethod(IndentedTextWriter indentedWriter, string instanceText, string typeFullNameToPublicize, IMethodSymbol methodSymbol)
+    private void GenerateMethod(IndentedTextWriter indentedWriter, string instanceText, string memberAccessorInstanceText, IMethodSymbol methodSymbol, MemberLifetime memberLifetime, MemberVisibility memberVisibility)
     {
         var returnTypeFullName = methodSymbol.ReturnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         var staticOrEmpty = methodSymbol.IsStatic ? "static " : string.Empty;
@@ -169,17 +186,17 @@ public class PublicizerSourceGenerator : ISourceGenerator
         if (!methodSymbol.ReturnsVoid)
             indentedWriter.Write($"({returnTypeFullName}) ");
 
-        indentedWriter.WriteLine($"typeof({typeFullNameToPublicize}).GetMethod(\"{methodSymbol.Name}\", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Static, new Type[] {{ {parametersTypeText} }}).Invoke({instanceText}, new object[] {{ {parametersInvocationText} }});");
+        indentedWriter.WriteLine($"{memberAccessorInstanceText}.InvokeMethod({instanceText}, \"{methodSymbol.Name}\", new Type[] {{ {parametersTypeText} }}, new object[] {{ {parametersInvocationText} }}, global::{typeof(MemberLifetime).FullName}.{memberLifetime}, global::{typeof(MemberVisibility).FullName}.{memberVisibility});");
 
         indentedWriter.Indent--;
     }
 
-    private void GenerateGetSet(IndentedTextWriter indentedWriter, string instanceText, string typeFullNameToPublicize, ISymbol memberSymbol, bool isGet)
+    private void GenerateGetSet(IndentedTextWriter indentedWriter, string instanceText, string memberAccessorInstanceText, ISymbol memberSymbol, bool isGet, MemberLifetime memberLifetime, MemberVisibility memberVisibility)
     {
-        var getMemberText = memberSymbol switch
+        var memberText = memberSymbol switch
         {
-            IPropertySymbol => "GetProperty",
-            IFieldSymbol => "GetField",
+            IPropertySymbol => "Property",
+            IFieldSymbol => "Field",
             _ => throw new ArgumentOutOfRangeException(nameof(memberSymbol), memberSymbol, $"Property or field is needed")
         };
 
@@ -192,11 +209,11 @@ public class PublicizerSourceGenerator : ISourceGenerator
 
         if (isGet)
         {
-            indentedWriter.WriteLine($"get => ({memberTypeFullName}) typeof({typeFullNameToPublicize}).{getMemberText}(\"{memberSymbol.Name}\", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Static).GetValue({instanceText});");
+            indentedWriter.WriteLine($"get => {memberAccessorInstanceText}.Get{memberText}Value<{memberTypeFullName}>({instanceText}, \"{memberSymbol.Name}\", global::{typeof(MemberLifetime).FullName}.{memberLifetime}, global::{typeof(MemberVisibility).FullName}.{memberVisibility});");
         }
         else
         {
-            indentedWriter.WriteLine($"set => typeof({typeFullNameToPublicize}).{getMemberText}(\"{memberSymbol.Name}\", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Static).SetValue({instanceText}, value);");
+            indentedWriter.WriteLine($"set => {memberAccessorInstanceText}.Set{memberText}Value<{memberTypeFullName}>({instanceText}, \"{memberSymbol.Name}\", value, global::{typeof(MemberLifetime).FullName}.{memberLifetime}, global::{typeof(MemberVisibility).FullName}.{memberVisibility});");
         }
     }
 
