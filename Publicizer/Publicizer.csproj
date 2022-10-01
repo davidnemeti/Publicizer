@@ -6,12 +6,13 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Authors>Dávid Németi</Authors>
     <Description>Access private members in a typesafe manner.</Description>
     <PackageTags>SourceGenerator;Reflection;PrivateMembers;Typesafe;CompileTimeSafety</PackageTags>
     <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/davidnemeti/Publicizer</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
 
     <!--
       We want to include the build output as a lib dependency, because although we do not need the source generator during runtime, however we do need the attribute.
@@ -23,6 +24,7 @@
   <ItemGroup>
     <!-- Package the generator in the analyzer directory of the nuget package -->
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="..\README.md" Pack="true" PackagePath="\"/>
   </ItemGroup>
 
   <ItemGroup>
