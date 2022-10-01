@@ -10,7 +10,7 @@ using Microsoft.CodeAnalysis.Text;
 namespace Publicizer;
 
 [Generator]
-public class PublicizerSourceGenerator : ISourceGenerator
+internal class PublicizerSourceGenerator : ISourceGenerator
 {
     public void Execute(GeneratorExecutionContext context)
     {
@@ -34,25 +34,25 @@ public class PublicizerSourceGenerator : ISourceGenerator
             var typeSymbolToPublicize = (INamedTypeSymbol)publicizeAttributeData.ConstructorArguments[0].Value!;
             var memberLifetime = (MemberLifetime)publicizeAttributeData.ConstructorArguments[1].Value!;
             var memberVisibility = (MemberVisibility)publicizeAttributeData.ConstructorArguments[2].Value!;
-            var specialMemberAccessorTypeSymbol = (INamedTypeSymbol?) publicizeAttributeData.ConstructorArguments[3].Value;
+            var customMemberAccessorTypeSymbol = (INamedTypeSymbol?) publicizeAttributeData.ConstructorArguments[3].Value;
 
             if (proxyTypeSymbol.ContainingNamespace is { IsGlobalNamespace: false } @namespace)
             {
                 indentedWriter.WriteLine($"namespace {@namespace}");
                 indentedWriter.WriteLine("{");
                 indentedWriter.Indent++;
-                GenerateForwarding(indentedWriter, proxyTypeSymbol, typeSymbolToPublicize, memberLifetime, memberVisibility, specialMemberAccessorTypeSymbol);
+                GenerateForwarding(indentedWriter, proxyTypeSymbol, typeSymbolToPublicize, memberLifetime, memberVisibility, customMemberAccessorTypeSymbol);
                 indentedWriter.Indent--;
                 indentedWriter.WriteLine("}");
             }
             else
-                GenerateForwarding(indentedWriter, proxyTypeSymbol, typeSymbolToPublicize, memberLifetime, memberVisibility, specialMemberAccessorTypeSymbol);
+                GenerateForwarding(indentedWriter, proxyTypeSymbol, typeSymbolToPublicize, memberLifetime, memberVisibility, customMemberAccessorTypeSymbol);
 
             return stringWriter.ToString();
         }
     }
 
-    private void GenerateForwarding(IndentedTextWriter indentedWriter, INamedTypeSymbol proxyTypeSymbol, INamedTypeSymbol typeSymbolToPublicize, MemberLifetime memberLifetime, MemberVisibility memberVisibility, INamedTypeSymbol? specialMemberAccessorTypeSymbol)
+    private void GenerateForwarding(IndentedTextWriter indentedWriter, INamedTypeSymbol proxyTypeSymbol, INamedTypeSymbol typeSymbolToPublicize, MemberLifetime memberLifetime, MemberVisibility memberVisibility, INamedTypeSymbol? customMemberAccessorTypeSymbol)
     {
         indentedWriter.WriteLine($"public partial class {proxyTypeSymbol.Name}");
         indentedWriter.WriteLine("{");
@@ -66,8 +66,8 @@ public class PublicizerSourceGenerator : ISourceGenerator
         var typeToPublicizeFullName = typeSymbolToPublicize.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         var memberAccessorStaticTypeText = $"global::Publicizer.{nameof(IMemberAccessor<object>)}<{typeToPublicizeFullName}>";
 
-        var memberAccessorDynamicTypeText = specialMemberAccessorTypeSymbol != null
-            ? specialMemberAccessorTypeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
+        var memberAccessorDynamicTypeText = customMemberAccessorTypeSymbol != null
+            ? customMemberAccessorTypeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
             : $"global::Publicizer.{nameof(ReflectionMemberAccessor<object>)}<{typeToPublicizeFullName}>";
 
         var memberAccessorInstantiationText = $"new {memberAccessorDynamicTypeText}()";

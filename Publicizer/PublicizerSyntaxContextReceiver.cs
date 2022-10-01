@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Publicizer;
 
-public class PublicizerSyntaxContextReceiver : ISyntaxContextReceiver
+internal class PublicizerSyntaxContextReceiver : ISyntaxContextReceiver
 {
     private List<(INamedTypeSymbol, IReadOnlyList<AttributeData>)> _proxies = new ();
 

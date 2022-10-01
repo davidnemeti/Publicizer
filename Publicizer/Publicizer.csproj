@@ -5,14 +5,17 @@
     <LangVersion>10.0</LangVersion>
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Version>1.0.0</Version>
+    <Authors>Dávid Németi</Authors>
+    <Description>Access private members in a typesafe manner.</Description>
 
-    <!-- Do not include the generator as a lib dependency -->
-    <!--<IncludeBuildOutput>false</IncludeBuildOutput>-->
+    <!--
+      We want to include the build output as a lib dependency, because although we do not need the source generator during runtime, however we do need the attribute.
+      Thus, we do not apply the following:
+      <IncludeBuildOutput>false</IncludeBuildOutput>
+    -->
   </PropertyGroup>
-
-  <ItemGroup>
-    <!--<None Remove="bin\Debug\netstandard2.0\Publicizer.dll" />-->
-  </ItemGroup>
 
   <ItemGroup>
     <!-- Package the generator in the analyzer directory of the nuget package -->

@@ -20,7 +20,7 @@ namespace OuterNamespace
         {
         }
 
-        [Publicize(typeof(TypeWithPrivateMembers), specialMemberAccessorType: typeof(SpecialMemberAccessor<TypeWithPrivateMembers>))]
+        [Publicize(typeof(TypeWithPrivateMembers), customMemberAccessorType: typeof(SpecialMemberAccessor<TypeWithPrivateMembers>))]
         public partial class ProxyWithSpecialMemberAccessorType
         {
         }
