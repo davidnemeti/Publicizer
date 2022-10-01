@@ -54,10 +54,6 @@ internal class PublicizerSourceGenerator : ISourceGenerator
 
     private void GenerateForwarding(IndentedTextWriter indentedWriter, INamedTypeSymbol proxyTypeSymbol, INamedTypeSymbol typeSymbolToPublicize, MemberLifetime memberLifetime, MemberVisibility memberVisibility, INamedTypeSymbol? customMemberAccessorTypeSymbol)
     {
-        indentedWriter.WriteLine($"public partial class {proxyTypeSymbol.Name}");
-        indentedWriter.WriteLine("{");
-        indentedWriter.Indent++;
-
         // NOTE: The name of the fields are choosen so we can avoid name collisions with the orginial type's members.
         // In case of name collision, one can just simply change the name of the proxy type.
         var instanceToPublicizeName = $"{proxyTypeSymbol.Name}_{typeSymbolToPublicize.Name}";
@@ -72,6 +68,20 @@ internal class PublicizerSourceGenerator : ISourceGenerator
 
         var memberAccessorInstantiationText = $"new {memberAccessorDynamicTypeText}()";
 
+        indentedWriter.WriteLine($"/// <summary>");
+        indentedWriter.WriteLine($"/// Proxy type which can be used to access the private members of <see cref=\"{typeToPublicizeFullName}\"/>.");
+
+        if (memberLifetime.HasFlag(MemberLifetime.Static))
+            indentedWriter.WriteLine($"/// Private static members can be accessed through public static members of the proxy type.");
+
+        if (memberLifetime.HasFlag(MemberLifetime.Instance))
+            indentedWriter.WriteLine($"/// Private instance members can be accessed through public instance members of the proxy type, thus the proxy type needs to be instantiated.");
+
+        indentedWriter.WriteLine($"/// </summary>");
+        indentedWriter.WriteLine($"public partial class {proxyTypeSymbol.Name}");
+        indentedWriter.WriteLine("{");
+        indentedWriter.Indent++;
+
         indentedWriter.WriteLine($"private static readonly {memberAccessorStaticTypeText} {memberAccessorInstanceText} = {memberAccessorInstantiationText};");
         indentedWriter.WriteLine();
 
@@ -82,6 +92,10 @@ internal class PublicizerSourceGenerator : ISourceGenerator
 
             const string instanceToPublicizeParameterName = "instanceToPublicize";
 
+            indentedWriter.WriteLine($"/// <summary>");
+            indentedWriter.WriteLine($"/// Creates a proxy instance which can be used to access the private instance members of <paramref name=\"{instanceToPublicizeParameterName}\"/>.");
+            indentedWriter.WriteLine($"/// </summary>");
+            indentedWriter.WriteLine($"/// <param name=\"{instanceToPublicizeParameterName}\">The instance of which private members needs to be accessed.</param>");
             indentedWriter.WriteLine($"public {proxyTypeSymbol.Name}({typeToPublicizeFullName} {instanceToPublicizeParameterName})");
             indentedWriter.WriteLine("{");
             indentedWriter.Indent++;
@@ -139,6 +153,9 @@ internal class PublicizerSourceGenerator : ISourceGenerator
         var propertyTypeFullName = propertySymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         var staticOrEmpty = propertySymbol.IsStatic ? "static " : string.Empty;
 
+        indentedWriter.WriteLine($"/// <summary>");
+        indentedWriter.WriteLine($"/// Forwards to property <see cref=\"{propertySymbol.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}.{propertySymbol.Name}\"/>.");
+        indentedWriter.WriteLine($"/// </summary>");
         indentedWriter.WriteLine($"public {staticOrEmpty}{propertyTypeFullName} {propertySymbol.Name}");
         indentedWriter.WriteLine("{");
         indentedWriter.Indent++;
@@ -158,6 +175,9 @@ internal class PublicizerSourceGenerator : ISourceGenerator
         var fieldTypeFullName = fieldSymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         var staticOrEmpty = fieldSymbol.IsStatic ? "static " : string.Empty;
 
+        indentedWriter.WriteLine($"/// <summary>");
+        indentedWriter.WriteLine($"/// Forwards to field <see cref=\"{fieldSymbol.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}.{fieldSymbol.Name}\"/>.");
+        indentedWriter.WriteLine($"/// </summary>");
         indentedWriter.WriteLine($"public {staticOrEmpty}{fieldTypeFullName} {fieldSymbol.Name}");
         indentedWriter.WriteLine("{");
         indentedWriter.Indent++;
@@ -178,8 +198,12 @@ internal class PublicizerSourceGenerator : ISourceGenerator
         );
 
         var parametersTypeText = string.Join(", ", methodSymbol.Parameters.Select(parameter => $"typeof({parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)})"));
+        var parametersTypeXmlDocText = string.Join(", ", methodSymbol.Parameters.Select(parameter => $"{parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}"));
         var parametersInvocationText = string.Join(", ", methodSymbol.Parameters.Select(parameter => parameter.Name));
 
+        indentedWriter.WriteLine($"/// <summary>");
+        indentedWriter.WriteLine($"/// Forwards to method <see cref=\"{methodSymbol.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}.{methodSymbol.Name}({parametersTypeXmlDocText})\"/>.");
+        indentedWriter.WriteLine($"/// </summary>");
         indentedWriter.WriteLine($"public {staticOrEmpty}{returnTypeFullName} {methodSymbol.Name}({parametersSignatureText}) =>");
         indentedWriter.Indent++;
 
