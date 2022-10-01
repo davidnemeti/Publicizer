@@ -8,6 +8,12 @@ The private members of the class is accessed through a **proxy** class which con
 
 During **runtime** the actual implementation of forwarding uses **reflection** (or any other **custom mechanism**) to access the private members.
 
+## NuGet
+
+Publicizer can be used as a nuget package:
+
+[![#](https://img.shields.io/nuget/v/Publicizer.svg)](https://www.nuget.org/packages/Publicizer)
+
 ## Example
 
 Let assume the following **class with private members**:
