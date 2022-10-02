@@ -16,7 +16,7 @@ Publicizer can be used as a nuget package:
 
 ## Example
 
-### The original class with private members
+### The original class
 
 Let assume the following **class with private members**:
 
