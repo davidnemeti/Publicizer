@@ -1,32 +1,28 @@
-﻿// See https://aka.ms/new-console-template for more information
-
-using NamespaceForOtherTypes;
+﻿using NamespaceForOtherTypes;
 using NamespaceForTypeWithPrivateMembers;
-using OuterNamespace.NamespaceForForwarderType;
-
-Console.WriteLine("Hello, World!");
+using OuterNamespace.NamespaceForProxyType;
 
 var instance = new TypeWithPrivateMembers();
 
-var forwarder = new Proxy(instance);
+var proxy = new Proxy(instance);
 
-Console.WriteLine($"_field = {forwarder._field}");
-forwarder._field = new OtherType(31);
-Console.WriteLine($"_field = {forwarder._field}");
+Console.WriteLine($"_field = {proxy._field}");
+proxy._field = new OtherType(31);
+Console.WriteLine($"_field = {proxy._field}");
 
-Console.WriteLine($"_property = {forwarder._property}");
-forwarder._property++;
-Console.WriteLine($"_property = {forwarder._property}");
+Console.WriteLine($"_property = {proxy._property}");
+proxy._property++;
+Console.WriteLine($"_property = {proxy._property}");
 
-Console.WriteLine($"_readonlyProperty = {forwarder._readonlyProperty}");
+Console.WriteLine($"_readonlyProperty = {proxy._readonlyProperty}");
 
-Console.WriteLine(forwarder.Function());
-Console.WriteLine(forwarder.Function(15));
-Console.WriteLine(forwarder.Function(15, new OtherType(77)));
+Console.WriteLine(proxy.Function());
+Console.WriteLine(proxy.Function(15));
+Console.WriteLine(proxy.Function(15, new OtherType(77)));
 
-forwarder.Procedure();
-forwarder.Procedure(15);
-forwarder.Procedure(15, new OtherType(77));
+proxy.Procedure();
+proxy.Procedure(15);
+proxy.Procedure(15, new OtherType(77));
 
 Console.WriteLine($"StaticField = {StaticProxy.StaticField}");
 StaticProxy.StaticField++;

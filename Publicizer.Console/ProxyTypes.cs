@@ -3,7 +3,7 @@ using NamespaceForTypeWithPrivateMembers;
 
 namespace OuterNamespace
 {
-    namespace NamespaceForForwarderType
+    namespace NamespaceForProxyType
     {
         [Publicize(typeof(TypeWithPrivateMembers))]
         public partial class Proxy
