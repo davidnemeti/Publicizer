@@ -16,6 +16,8 @@ Publicizer can be used as a nuget package:
 
 ## Example
 
+### The original class with private members
+
 Let assume the following **class with private members**:
 
 ```csharp
@@ -77,7 +79,9 @@ public class TypeWithPrivateMembers
 }
 ```
 
-In order to access the private members, you need to create a *partial* **proxy class** (with an arbitrary name), decorate it with the `Publicize` attribute and assign the class with the private members:
+### The proxy class
+
+In order to access the private members, you need to create a *partial* **proxy class** (with an arbitrary name), decorate it with the `Publicize` attribute and refer to the original class:
 
 ```csharp
 [Publicize(typeof(TypeWithPrivateMembers))]
@@ -85,6 +89,8 @@ public partial class Proxy
 {
 }
 ```
+
+### The generated code
 
 Publicizer's **source generator will generate** the corresponding public members into the proxy class with the proper *forwarding* code as implementation:
 
@@ -160,7 +166,11 @@ public partial class Proxy
 }
 ```
 
-To access the **instance** members of the original class through the proxy class, the original class needs to be **instantiated**, as well as the proxy class needs to be instantiated with that instance of the original class:
+### Usage
+
+#### Accessing instance members
+
+To **access** the **instance** members of the original class through the proxy class, the original class needs to be **instantiated**, as well as the proxy class needs to be instantiated with that instance of the original class:
 
 ```csharp
 var instance = new TypeWithPrivateMembers();
@@ -186,7 +196,9 @@ proxy.Procedure(15);
 proxy.Procedure(15, new OtherType(77));
 ```
 
-To access the **static** members of the original class through the proxy class, the static members of the proxy class can be used:
+#### Accessing static members
+
+To **access** the **static** members of the original class through the proxy class, the static members of the proxy class can be used:
 
 ```csharp
 Console.WriteLine($"StaticField = {StaticProxy.StaticField}");
