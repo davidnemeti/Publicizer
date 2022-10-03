@@ -1,5 +1,11 @@
 # Publicizer
 
+## NuGet
+
+Publicizer can be used as a nuget package:
+
+[![#](https://img.shields.io/nuget/v/Publicizer.svg)](https://www.nuget.org/packages/Publicizer)
+
 ## Summary
 
 Publicizer is a [source generator](https://learn.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview) that let you access the **private members** of a class from outside with **compile-time safety** in a **typesafe** manner.
@@ -7,12 +13,6 @@ Publicizer is a [source generator](https://learn.microsoft.com/en-us/dotnet/csha
 The private members of the class is accessed through a **proxy** class which contains the generated public members which **forward** to the private members of the original class. Thus, it provides a typesafe way to access the private members. If the name or type of a private member of the original class changes, so does the name or type of the generated public member in the proxy class. Therefore, any **name or type mismatches emerge during compile time**. No more `NullReferenceException`s or `InvalidCastException`s!
 
 During **runtime** the actual implementation of forwarding uses **reflection** (or any other **custom mechanism**) to access the private members.
-
-## NuGet
-
-Publicizer can be used as a nuget package:
-
-[![#](https://img.shields.io/nuget/v/Publicizer.svg)](https://www.nuget.org/packages/Publicizer)
 
 ## Example
 
