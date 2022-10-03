@@ -4,6 +4,7 @@ namespace Publicizer;
 
 /// <summary>
 /// Generates public members into the decorated proxy class which forward to the private members of <see cref="TypeToPublicize"/>.
+/// This way the private members of <see cref="TypeToPublicize"/> can be accessed with compile-time safety.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
 public class PublicizeAttribute : Attribute

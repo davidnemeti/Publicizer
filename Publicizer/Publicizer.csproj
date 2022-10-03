@@ -8,7 +8,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Version>1.0.1</Version>
     <Authors>Dávid Németi</Authors>
-    <Description>Access private members in a typesafe manner.</Description>
+    <Description>Access private members with compile-time safety.</Description>
     <PackageTags>SourceGenerator;Reflection;PrivateMembers;Typesafe;CompileTimeSafety</PackageTags>
     <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/davidnemeti/Publicizer</PackageProjectUrl>
