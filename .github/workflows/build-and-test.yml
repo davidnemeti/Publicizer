@@ -5,7 +5,13 @@ on:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
-  workflow_call:
+  workflow_dispatch:
+    inputs:
+      publish_nuget:
+        description: 'Publish NuGet package to nuget.org'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   build:
@@ -24,7 +30,6 @@ jobs:
       run: dotnet build --no-restore --configuration Release
     - name: Test
       run: dotnet test --no-build --verbosity normal
-    - name: ls
-      run: ls
-    - name: ls 2
+    - name: Publish NuGet package to nuget.org
+      if: ${{ inputs.publish_nuget }}
       run: ls ./Publicizer/bin/Release
