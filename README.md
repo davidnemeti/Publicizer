@@ -1,10 +1,9 @@
 # Publicizer
 
-## NuGet
-
-Publicizer can be used as a nuget package:
-
-[![#](https://img.shields.io/nuget/v/Publicizer.svg)](https://www.nuget.org/packages/Publicizer)
+| Channel | Status |
+| --- | --- |
+| Build | [![Build](https://github.com/davidnemeti/Publicizer/actions/workflows/build.yml/badge.svg)](https://github.com/davidnemeti/Publicizer/actions/workflows/build.yml) |
+| NuGet.org | [![#](https://img.shields.io/nuget/v/Publicizer.svg)](https://www.nuget.org/packages/Publicizer) |
 
 ## Summary
 
@@ -92,7 +91,7 @@ public partial class Proxy
 
 ### The generated code
 
-Publicizer's **source generator will generate** the corresponding public members into the proxy class with the proper *forwarding* code as implementation:
+Publicizer's **source generator** will generate the corresponding public members into the proxy class with the proper *forwarding* code as implementation:
 
 ```csharp
 public partial class Proxy
