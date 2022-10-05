@@ -15,6 +15,6 @@ jobs:
     - name: ls
       run: ls
     - name: ls
-      run: ls Publicizer/bin/Release/
+      run: ls ./Publicizer/bin/Release/
     - name: The end
       run: echo "This is the end"
