@@ -1,9 +1,6 @@
 # Publicizer
 
-| Channel | Status |
-| --- | --- |
-| Build | [![Build](https://github.com/davidnemeti/Publicizer/actions/workflows/build.yml/badge.svg)](https://github.com/davidnemeti/Publicizer/actions/workflows/build.yml) |
-| NuGet.org | [![#](https://img.shields.io/nuget/v/Publicizer.svg)](https://www.nuget.org/packages/Publicizer) |
+[![#](https://img.shields.io/nuget/v/Publicizer.svg)](https://www.nuget.org/packages/Publicizer) [![Build](https://github.com/davidnemeti/Publicizer/actions/workflows/build.yml/badge.svg)](https://github.com/davidnemeti/Publicizer/actions/workflows/build.yml)
 
 ## Summary
 
