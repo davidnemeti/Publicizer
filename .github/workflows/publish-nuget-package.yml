@@ -8,6 +8,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: .github/workflows/build-and-test.yml@main
+    - uses: build-and-test.yml@main
     - name: The end
       run: echo "This is the end"
