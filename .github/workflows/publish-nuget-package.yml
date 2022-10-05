@@ -12,7 +12,9 @@ jobs:
     steps:
     - name: Working directory
       run: pwd
-    - name: Working directory
+    - name: ls
+      run: ls
+    - name: ls
       run: ls Publicizer/bin/Release/
     - name: The end
       run: echo "This is the end"
