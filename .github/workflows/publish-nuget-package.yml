@@ -9,6 +9,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - uses: ./.github/workflows/build-and-test.yml@main
+    - uses: ./.github/workflows/build-and-test.yml
     - name: The end
       run: echo "This is the end"
