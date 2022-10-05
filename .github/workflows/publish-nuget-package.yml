@@ -1,0 +1,12 @@
+name: .NET
+
+on: workflow_dispatch
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: .github/workflows/build-and-test.yml@main
+    - name: The end
