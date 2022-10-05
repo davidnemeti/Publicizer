@@ -32,4 +32,4 @@ jobs:
       run: dotnet test --no-build --verbosity normal
     - name: Publish NuGet package to nuget.org
       if: ${{ inputs.publish_nuget }}
-      run: dotnet nuget push "./Publicizer/bin/Release/*.nupkg" --source https://api.nuget.org/v3/index.json
+      run: dotnet nuget push "./Publicizer/bin/Release/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_ORG_API_KEY }}
