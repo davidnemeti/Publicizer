@@ -1,6 +1,6 @@
 # Publicizer
 
-[![#](https://img.shields.io/nuget/v/Publicizer.svg)](https://www.nuget.org/packages/Publicizer) [![Build](https://github.com/davidnemeti/Publicizer/actions/workflows/build.yml/badge.svg)](https://github.com/davidnemeti/Publicizer/actions/workflows/build.yml)
+[![NuGet](https://img.shields.io/nuget/v/Publicizer.svg)](https://www.nuget.org/packages/Publicizer) [![NuGet](https://img.shields.io/github/release/davidnemeti/Publicizer?display_name=tag&sort=semver)](../../releases/latest) [![Build](https://github.com/davidnemeti/Publicizer/actions/workflows/build.yml/badge.svg)](https://github.com/davidnemeti/Publicizer/actions/workflows/build.yml) [![License](https://img.shields.io/badge/license-LGPLv3-green)](https://licenses.nuget.org/LGPL-3.0-only)
 
 ## Summary
 
