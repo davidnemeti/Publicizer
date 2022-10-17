@@ -86,9 +86,59 @@ public partial class Proxy
 }
 ```
 
+### Usage
+
+#### Accessing instance members
+
+To **access** the **instance** members of the original class through the proxy class, the original class needs to be **instantiated**, as well as the proxy class needs to be instantiated with that instance of the original class:
+
+```csharp
+var instance = new TypeWithPrivateMembers();
+
+var proxy = new Proxy(instance);
+
+Console.WriteLine($"_field = {proxy._field}");
+proxy._field = new OtherType(31);
+Console.WriteLine($"_field = {proxy._field}");
+
+Console.WriteLine($"_property = {proxy._property}");
+proxy._property++;
+Console.WriteLine($"_property = {proxy._property}");
+
+Console.WriteLine($"_readonlyProperty = {proxy._readonlyProperty}");
+
+Console.WriteLine(proxy.Function());
+Console.WriteLine(proxy.Function(15));
+Console.WriteLine(proxy.Function(15, new OtherType(77)));
+
+proxy.Procedure();
+proxy.Procedure(15);
+proxy.Procedure(15, new OtherType(77));
+```
+
+#### Accessing static members
+
+To **access** the **static** members of the original class through the proxy class, the static members of the proxy class can be used:
+
+```csharp
+Console.WriteLine($"StaticField = {StaticProxy.StaticField}");
+StaticProxy.StaticField++;
+Console.WriteLine($"StaticField = {StaticProxy.StaticField}");
+
+Console.WriteLine($"StaticProperty = {StaticProxy.StaticProperty}");
+StaticProxy.StaticProperty++;
+Console.WriteLine($"StaticProperty = {StaticProxy.StaticProperty}");
+
+Console.WriteLine($"StaticReadonlyProperty = {StaticProxy.StaticReadonlyProperty}");
+
+Console.WriteLine(StaticProxy.StaticFunction());
+
+StaticProxy.StaticProcedure();
+```
+
 ### The generated code
 
-Publicizer's **source generator** will generate the corresponding public members into the proxy class with the proper *forwarding* code as implementation:
+Behind the scenes, Publicizer's **source generator** will generate the corresponding public members into the proxy class with the proper *forwarding* code as implementation:
 
 ```csharp
 public partial class Proxy
@@ -160,54 +210,4 @@ public partial class Proxy
     public string Function(int a, global::NamespaceForOtherTypes.OtherType otherType) =>
         (string) Proxy_IMemberAccessor.InvokeMethod(this.Proxy_TypeWithPrivateMembers, "Function", new Type[] { typeof(int), typeof(global::NamespaceForOtherTypes.OtherType) }, new object[] { a, otherType }, global::Publicizer.MemberLifetime.All, global::Publicizer.MemberVisibility.All);
 }
-```
-
-### Usage
-
-#### Accessing instance members
-
-To **access** the **instance** members of the original class through the proxy class, the original class needs to be **instantiated**, as well as the proxy class needs to be instantiated with that instance of the original class:
-
-```csharp
-var instance = new TypeWithPrivateMembers();
-
-var proxy = new Proxy(instance);
-
-Console.WriteLine($"_field = {proxy._field}");
-proxy._field = new OtherType(31);
-Console.WriteLine($"_field = {proxy._field}");
-
-Console.WriteLine($"_property = {proxy._property}");
-proxy._property++;
-Console.WriteLine($"_property = {proxy._property}");
-
-Console.WriteLine($"_readonlyProperty = {proxy._readonlyProperty}");
-
-Console.WriteLine(proxy.Function());
-Console.WriteLine(proxy.Function(15));
-Console.WriteLine(proxy.Function(15, new OtherType(77)));
-
-proxy.Procedure();
-proxy.Procedure(15);
-proxy.Procedure(15, new OtherType(77));
-```
-
-#### Accessing static members
-
-To **access** the **static** members of the original class through the proxy class, the static members of the proxy class can be used:
-
-```csharp
-Console.WriteLine($"StaticField = {StaticProxy.StaticField}");
-StaticProxy.StaticField++;
-Console.WriteLine($"StaticField = {StaticProxy.StaticField}");
-
-Console.WriteLine($"StaticProperty = {StaticProxy.StaticProperty}");
-StaticProxy.StaticProperty++;
-Console.WriteLine($"StaticProperty = {StaticProxy.StaticProperty}");
-
-Console.WriteLine($"StaticReadonlyProperty = {StaticProxy.StaticReadonlyProperty}");
-
-Console.WriteLine(StaticProxy.StaticFunction());
-
-StaticProxy.StaticProcedure();
 ```
