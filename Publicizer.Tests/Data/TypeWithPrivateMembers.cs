@@ -4,57 +4,60 @@ namespace NamespaceForTypeWithPrivateMembers;
 
 public class TypeWithPrivateMembers
 {
-#pragma warning disable CS0414 // The field 'TypeWithPrivateMembers.StaticField' is assigned but its value is never used
-    private static int StaticField = 3;
-#pragma warning restore CS0414 // The field 'TypeWithPrivateMembers.StaticField' is assigned but its value is never used
-    private static int StaticReadonlyProperty { get; } = 5;
-    private static int StaticProperty { get; set; } = 8;
+#pragma warning disable CS0169 // The field 'TypeWithPrivateMembers._readonlyField' is never used
+    private static int StaticField;
+#pragma warning restore CS0169 // The field 'TypeWithPrivateMembers._readonlyField' is never used
+    private static int StaticProperty { get; set; }
 
-    private OtherType _field = new OtherType(30);
-    private int _readonlyProperty { get; } = 50;
-    private int _property { get; set; } = 80;
+#pragma warning disable CS0169 // The field 'TypeWithPrivateMembers._readonlyField' is never used
+    private int _field;
+    private readonly int _readonlyField;
+#pragma warning restore CS0169 // The field 'TypeWithPrivateMembers._readonlyField' is never used
+    private OtherType _complexField = new OtherType(0);
+    private int _readonlyProperty { get; }
+    private int _property { get; set; }
 
     private static void StaticProcedure()
     {
-        Console.WriteLine($"{nameof(StaticProcedure)}()");
+        StaticLogger.Log();
     }
 
     private static string StaticFunction()
     {
-        Console.WriteLine($"{nameof(StaticFunction)}()");
+        StaticLogger.Log();
         return "hello";
     }
 
     private void Procedure()
     {
-        Console.WriteLine($"{nameof(Procedure)}()");
+        StaticLogger.Log();
     }
 
     private string Function()
     {
-        Console.WriteLine($"{nameof(Function)}()");
+        StaticLogger.Log();
         return "hello";
     }
 
     private void Procedure(int a)
     {
-        Console.WriteLine($"{nameof(Procedure)}(int a)");
+        StaticLogger.Log();
     }
 
     private string Function(int a)
     {
-        Console.WriteLine($"{nameof(Function)}(int a)");
+        StaticLogger.Log();
         return a.ToString();
     }
 
     private void Procedure(int a, OtherType otherType)
     {
-        Console.WriteLine($"{nameof(Procedure)}(int a, OtherType otherType)");
+        StaticLogger.Log();
     }
 
     private string Function(int a, OtherType otherType)
     {
-        Console.WriteLine($"{nameof(Function)}(int a, OtherType otherType)");
-        return a.ToString();
+        StaticLogger.Log();
+        return $"{a}, {otherType.Number}";
     }
 }

@@ -7,8 +7,6 @@ var instance = new TypeWithPrivateMembers();
 var proxy = new Proxy(instance);
 
 Console.WriteLine($"_field = {proxy._field}");
-proxy._field = new OtherType(31);
-Console.WriteLine($"_field = {proxy._field}");
 
 Console.WriteLine($"_property = {proxy._property}");
 proxy._property++;
@@ -31,8 +29,6 @@ Console.WriteLine($"StaticField = {StaticProxy.StaticField}");
 Console.WriteLine($"StaticProperty = {StaticProxy.StaticProperty}");
 StaticProxy.StaticProperty++;
 Console.WriteLine($"StaticProperty = {StaticProxy.StaticProperty}");
-
-Console.WriteLine($"StaticReadonlyProperty = {StaticProxy.StaticReadonlyProperty}");
 
 Console.WriteLine(StaticProxy.StaticFunction());
 
