@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Publicizer.Tests\Publicizer.Tests.csproj" />
     <ProjectReference Include="..\Publicizer\Publicizer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
   </ItemGroup>
 
