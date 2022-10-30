@@ -1,6 +1,6 @@
 ﻿using Publicizer;
 
-public class SpecialMemberAccessor<T> : IMemberAccessor<T>
+public class CustomMemberAccessor<T> : IMemberAccessor<T>
 {
     private readonly ReflectionMemberAccessor<T> _reflectionMemberAccessor = new ReflectionMemberAccessor<T>();
 

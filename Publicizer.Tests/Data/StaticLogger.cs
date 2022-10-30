@@ -1,22 +1,31 @@
-﻿using System.Diagnostics;
+﻿using Architect.AmbientContexts;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace NamespaceForTypeWithPrivateMembers;
 
-public static class StaticLogger
+public class StaticLogger : AmbientScope<StaticLogger>
 {
-    private readonly static List<MethodBase> _loggedMethods = new ();
+    private readonly List<MethodBase> _loggedMethods;
 
-    public static IReadOnlyList<MethodBase> LoggedMethods => _loggedMethods;
+    public static IReadOnlyList<MethodBase> LoggedMethods => Current._loggedMethods;
+
+    public StaticLogger()
+        : base(AmbientScopeOption.JoinExisting)
+    {
+        _loggedMethods = EffectiveParentScope?._loggedMethods ?? new();
+        Activate();
+    }
 
     public static void Log()
     {
         var methodToLog = new StackTrace().GetFrame(1)!.GetMethod()!;
-        _loggedMethods.Add(methodToLog);
+        Current._loggedMethods.Add(methodToLog);
     }
 
-    public static void Reset()
+    protected override void DisposeImplementation()
     {
-        _loggedMethods.Clear();
     }
+
+    protected static StaticLogger Current => GetAmbientScope() ?? throw new InvalidOperationException($"No active {nameof(StaticLogger)} scope");
 }
