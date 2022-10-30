@@ -1,7 +1,6 @@
 using NamespaceForOtherTypes;
 using NamespaceForTypeWithPrivateMembers;
 using OuterNamespace.NamespaceForProxyType;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Publicizer.Tests;
 
