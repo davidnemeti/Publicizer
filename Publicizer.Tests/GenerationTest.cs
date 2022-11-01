@@ -8,7 +8,7 @@ public class GenerationTest
     public void ReadonlyField()
     {
         Assert.True(typeof(Proxy).GetProperty(nameof(Proxy._readonlyField))!.CanRead);
-        Assert.True(typeof(Proxy).GetProperty(nameof(Proxy._readonlyField))!.CanWrite);
+        Assert.False(typeof(Proxy).GetProperty(nameof(Proxy._readonlyField))!.CanWrite);
     }
 
     [Fact]
@@ -16,6 +16,20 @@ public class GenerationTest
     {
         Assert.True(typeof(Proxy).GetProperty(nameof(Proxy._readonlyProperty))!.CanRead);
         Assert.False(typeof(Proxy).GetProperty(nameof(Proxy._readonlyProperty))!.CanWrite);
+    }
+
+    [Fact]
+    public void ForcedReadonlyField()
+    {
+        Assert.True(typeof(ForcedProxy).GetProperty(nameof(ForcedProxy._readonlyField))!.CanRead);
+        Assert.True(typeof(ForcedProxy).GetProperty(nameof(ForcedProxy._readonlyField))!.CanWrite);
+    }
+
+    [Fact]
+    public void ForcedReadonlyProperty()
+    {
+        Assert.True(typeof(ForcedProxy).GetProperty(nameof(ForcedProxy._readonlyProperty))!.CanRead);
+        Assert.True(typeof(ForcedProxy).GetProperty(nameof(ForcedProxy._readonlyProperty))!.CanWrite);
     }
 
     [Fact]

@@ -7,13 +7,13 @@ namespace OuterNamespace
 {
     namespace NamespaceForProxyType
     {
-        public interface IProxy
+        public interface IForcedProxy
         {
             OtherType _complexField { get; set; }
             int _field { get; set; }
             int _property { get; set; }
             int _readonlyField { get; set; }
-            int _readonlyProperty { get; }
+            int _readonlyProperty { get; set; }
 
             string Function();
             string Function(int a);
@@ -24,7 +24,12 @@ namespace OuterNamespace
         }
 
         [Publicize(typeof(TypeWithPrivateMembers))]
-        public partial class Proxy : IProxy
+        public partial class Proxy
+        {
+        }
+
+        [Publicize(typeof(TypeWithPrivateMembers), accessorHandling: AccessorHandling.ForceReadAndWrite)]
+        public partial class ForcedProxy : IForcedProxy
         {
         }
 
@@ -38,8 +43,8 @@ namespace OuterNamespace
         {
         }
 
-        [Publicize(typeof(TypeWithPrivateMembers), customMemberAccessorType: typeof(CustomMemberAccessor<TypeWithPrivateMembers>))]
-        public partial class ProxyWithCustomMemberAccessorType : IProxy
+        [Publicize(typeof(TypeWithPrivateMembers), accessorHandling: AccessorHandling.ForceReadAndWrite, customMemberAccessorType: typeof(CustomMemberAccessor<TypeWithPrivateMembers>))]
+        public partial class ForcedProxyWithCustomMemberAccessorType : IForcedProxy
         {
         }
     }

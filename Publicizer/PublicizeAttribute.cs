@@ -25,6 +25,11 @@ public class PublicizeAttribute : Attribute
     public MemberVisibility MemberVisibility { get; }
 
     /// <summary>
+    /// The handling of generated accessors for fields (readonly vs. read/write) and for properties (<c>get</c> and <c>set</c> accessors).
+    /// </summary>
+    public AccessorHandling AccessorHandling { get; }
+
+    /// <summary>
     /// Optional member accessor type which implements <see cref="IMemberAccessor{T}"/> where the <c>T</c> generic parameter is <see cref="TypeToPublicize"/>.
     /// If missing, then the default <see cref="ReflectionMemberAccessor{T}"/> will be used.
     /// </summary>
@@ -36,15 +41,23 @@ public class PublicizeAttribute : Attribute
     /// <param name="typeToPublicize">The type of which private members need to be accessed.</param>
     /// <param name="memberLifetime">The lifetime of the members which needs to be generated and forwarded.</param>
     /// <param name="memberVisibility">The visibility of the members which needs to be generated and forwarded.</param>
+    /// <param name="accessorHandling">The handling of generated accessors for fields (readonly vs. read/write) and for properties (<c>get</c> and <c>set</c> accessors).</param>
     /// <param name="customMemberAccessorType">
     /// Optional member accessor type which implements <see cref="IMemberAccessor{T}"/> where the <c>T</c> generic parameter is <paramref name="typeToPublicize"/>.
     /// If missing, then the default <see cref="ReflectionMemberAccessor{T}"/> will be used.
     /// </param>
-    public PublicizeAttribute(Type typeToPublicize, MemberLifetime memberLifetime = MemberLifetime.All, MemberVisibility memberVisibility = MemberVisibility.All, Type? customMemberAccessorType = null)
+    public PublicizeAttribute(
+        Type typeToPublicize,
+        MemberLifetime memberLifetime = MemberLifetime.All,
+        MemberVisibility memberVisibility = MemberVisibility.All,
+        AccessorHandling accessorHandling = AccessorHandling.KeepOriginal,
+        Type? customMemberAccessorType = null
+    )
     {
         TypeToPublicize = typeToPublicize;
         MemberLifetime = memberLifetime;
         MemberVisibility = memberVisibility;
+        AccessorHandling = accessorHandling;
         CustomMemberAccessorType = customMemberAccessorType;
     }
 }

@@ -1,10 +1,12 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 
 namespace Publicizer;
 
 /// <summary>
 /// Lifetime of members inside a type.
 /// </summary>
+[Flags]
 public enum MemberLifetime
 {
     /// <summary>
@@ -26,6 +28,7 @@ public enum MemberLifetime
 /// <summary>
 /// Visibility of members inside a type.
 /// </summary>
+[Flags]
 public enum MemberVisibility
 {
     /// <summary>
@@ -42,6 +45,33 @@ public enum MemberVisibility
     /// Represents all visibilities.
     /// </summary>
     All = Public | NonPublic
+}
+
+/// <summary>
+/// Handling of accessors for fields (readonly vs. read/write) and for properties (<c>get</c> and <c>set</c> accessors).
+/// </summary>
+[Flags]
+public enum AccessorHandling
+{
+    /// <summary>
+    /// Keep everything as in the original class.
+    /// </summary>
+    KeepOriginal = 0,
+
+    /// <summary>
+    /// Readonly fields and readonly auto-implemented properties will be writable through the proxy.
+    /// </summary>
+    ForceWriteOnReadonly = 1 << 1,
+
+    /// <summary>
+    /// Writeonly fields and writeonly auto-implemented properties will be readable through the proxy.
+    /// </summary>
+    ForceReadOnWriteonly = 1 << 2,
+
+    /// <summary>
+    /// Combination of <see cref="ForceWriteOnReadonly"/> and <see cref="ForceReadOnWriteonly"/>.
+    /// </summary>
+    ForceReadAndWrite = ForceWriteOnReadonly | ForceReadOnWriteonly,
 }
 
 internal static class MemberTraitsConverterExtensions

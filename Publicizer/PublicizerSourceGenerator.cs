@@ -1,5 +1,6 @@
 ﻿using System;
 using System.CodeDom.Compiler;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
@@ -34,25 +35,26 @@ internal class PublicizerSourceGenerator : ISourceGenerator
             var typeSymbolToPublicize = (INamedTypeSymbol)publicizeAttributeData.ConstructorArguments[0].Value!;
             var memberLifetime = (MemberLifetime)publicizeAttributeData.ConstructorArguments[1].Value!;
             var memberVisibility = (MemberVisibility)publicizeAttributeData.ConstructorArguments[2].Value!;
-            var customMemberAccessorTypeSymbol = (INamedTypeSymbol?) publicizeAttributeData.ConstructorArguments[3].Value;
+            var accessorHandling = (AccessorHandling)publicizeAttributeData.ConstructorArguments[3].Value!;
+            var customMemberAccessorTypeSymbol = (INamedTypeSymbol?) publicizeAttributeData.ConstructorArguments[4].Value;
 
             if (proxyTypeSymbol.ContainingNamespace is { IsGlobalNamespace: false } @namespace)
             {
                 indentedWriter.WriteLine($"namespace {@namespace}");
                 indentedWriter.WriteLine("{");
                 indentedWriter.Indent++;
-                GenerateForwarding(indentedWriter, proxyTypeSymbol, typeSymbolToPublicize, memberLifetime, memberVisibility, customMemberAccessorTypeSymbol);
+                GenerateForwarding(indentedWriter, proxyTypeSymbol, typeSymbolToPublicize, memberLifetime, memberVisibility, accessorHandling, customMemberAccessorTypeSymbol);
                 indentedWriter.Indent--;
                 indentedWriter.WriteLine("}");
             }
             else
-                GenerateForwarding(indentedWriter, proxyTypeSymbol, typeSymbolToPublicize, memberLifetime, memberVisibility, customMemberAccessorTypeSymbol);
+                GenerateForwarding(indentedWriter, proxyTypeSymbol, typeSymbolToPublicize, memberLifetime, memberVisibility, accessorHandling, customMemberAccessorTypeSymbol);
 
             return stringWriter.ToString();
         }
     }
 
-    private void GenerateForwarding(IndentedTextWriter indentedWriter, INamedTypeSymbol proxyTypeSymbol, INamedTypeSymbol typeSymbolToPublicize, MemberLifetime memberLifetime, MemberVisibility memberVisibility, INamedTypeSymbol? customMemberAccessorTypeSymbol)
+    private void GenerateForwarding(IndentedTextWriter indentedWriter, INamedTypeSymbol proxyTypeSymbol, INamedTypeSymbol typeSymbolToPublicize, MemberLifetime memberLifetime, MemberVisibility memberVisibility, AccessorHandling accessorHandling, INamedTypeSymbol? customMemberAccessorTypeSymbol)
     {
         // NOTE: The name of the fields are choosen so we can avoid name collisions with the orginial type's members.
         // In case of name collision, one can just simply change the name of the proxy type.
@@ -110,6 +112,12 @@ internal class PublicizerSourceGenerator : ISourceGenerator
             .SelectMany(property => new[] { property.GetMethod, property.SetMethod })
             .ToImmutableHashSet(SymbolEqualityComparer.Default);
 
+        var propertyToBackingField = typeSymbolToPublicize
+            .GetMembers()
+            .OfType<IFieldSymbol>()
+            .Where(field => field.AssociatedSymbol is IPropertySymbol)
+            .ToImmutableDictionary(field => (IPropertySymbol)field.AssociatedSymbol!, (IEqualityComparer<IPropertySymbol>)SymbolEqualityComparer.Default);
+
         foreach (var memberSymbol in typeSymbolToPublicize.GetMembers())
         {
             if (!MatchMemberLifetime(memberSymbol, memberLifetime) || !MatchMemberVisibility(memberSymbol, memberVisibility))
@@ -121,12 +129,12 @@ internal class PublicizerSourceGenerator : ISourceGenerator
             {
                 case IPropertySymbol propertySymbol:
                     indentedWriter.WriteLine();
-                    GenerateProperty(indentedWriter, instanceText, memberAccessorInstanceText, propertySymbol, memberLifetime, memberVisibility);
+                    GenerateProperty(indentedWriter, instanceText, memberAccessorInstanceText, propertySymbol, memberLifetime, memberVisibility, accessorHandling, propertyToBackingField);
                     break;
 
                 case IFieldSymbol fieldSymbol when !fieldSymbol.IsImplicitlyDeclared:
                     indentedWriter.WriteLine();
-                    GenerateField(indentedWriter, instanceText, memberAccessorInstanceText, fieldSymbol, memberLifetime, memberVisibility);
+                    GenerateField(indentedWriter, instanceText, memberAccessorInstanceText, fieldSymbol, memberLifetime, memberVisibility, accessorHandling);
                     break;
 
                 case IMethodSymbol methodSymbol when !methodSymbol.IsImplicitlyDeclared && !methodSymbolsForProperties.Contains(methodSymbol):
@@ -148,7 +156,7 @@ internal class PublicizerSourceGenerator : ISourceGenerator
         memberVisibility.HasFlag(MemberVisibility.Public) && memberSymbol.DeclaredAccessibility == Accessibility.Public ||
         memberVisibility.HasFlag(MemberVisibility.NonPublic) && memberSymbol.DeclaredAccessibility != Accessibility.Public;
 
-    private void GenerateProperty(IndentedTextWriter indentedWriter, string instanceText, string memberAccessorInstanceText, IPropertySymbol propertySymbol, MemberLifetime memberLifetime, MemberVisibility memberVisibility)
+    private void GenerateProperty(IndentedTextWriter indentedWriter, string instanceText, string memberAccessorInstanceText, IPropertySymbol propertySymbol, MemberLifetime memberLifetime, MemberVisibility memberVisibility, AccessorHandling accessorHandling, IImmutableDictionary<IPropertySymbol, IFieldSymbol> propertyToBackingField)
     {
         var propertyTypeFullName = propertySymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         var staticOrEmpty = propertySymbol.IsStatic ? "static " : string.Empty;
@@ -160,17 +168,27 @@ internal class PublicizerSourceGenerator : ISourceGenerator
         indentedWriter.WriteLine("{");
         indentedWriter.Indent++;
 
-        if (propertySymbol.GetMethod is not null)
-            GenerateGetSet(indentedWriter, instanceText, memberAccessorInstanceText, propertySymbol, isGet: true, memberLifetime, memberVisibility);
+        if (propertySymbol.GetMethod is not null || accessorHandling.HasFlag(AccessorHandling.ForceReadOnWriteonly))
+        {
+            if (propertySymbol.GetMethod is not null)
+                GenerateGetSet(indentedWriter, instanceText, memberAccessorInstanceText, propertySymbol, isGet: true, memberLifetime, memberVisibility);
+            else if (propertyToBackingField.TryGetValue(propertySymbol, out var backingFieldSymbol))
+                GenerateGetSet(indentedWriter, instanceText, memberAccessorInstanceText, backingFieldSymbol, isGet: true, memberLifetime, memberVisibility);
+        }
 
-        if (propertySymbol.SetMethod is not null)
-            GenerateGetSet(indentedWriter, instanceText, memberAccessorInstanceText, propertySymbol, isGet: false, memberLifetime, memberVisibility);
+        if (propertySymbol.SetMethod is not null || accessorHandling.HasFlag(AccessorHandling.ForceWriteOnReadonly))
+        {
+            if (propertySymbol.SetMethod is not null)
+                GenerateGetSet(indentedWriter, instanceText, memberAccessorInstanceText, propertySymbol, isGet: false, memberLifetime, memberVisibility);
+            else if (propertyToBackingField.TryGetValue(propertySymbol, out var backingFieldSymbol))
+                GenerateGetSet(indentedWriter, instanceText, memberAccessorInstanceText, backingFieldSymbol, isGet: false, memberLifetime, memberVisibility);
+        }
 
         indentedWriter.Indent--;
         indentedWriter.WriteLine("}");
     }
 
-    private void GenerateField(IndentedTextWriter indentedWriter, string instanceText, string memberAccessorInstanceText, IFieldSymbol fieldSymbol, MemberLifetime memberLifetime, MemberVisibility memberVisibility)
+    private void GenerateField(IndentedTextWriter indentedWriter, string instanceText, string memberAccessorInstanceText, IFieldSymbol fieldSymbol, MemberLifetime memberLifetime, MemberVisibility memberVisibility, AccessorHandling accessorHandling)
     {
         var fieldTypeFullName = fieldSymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         var staticOrEmpty = fieldSymbol.IsStatic ? "static " : string.Empty;
@@ -181,8 +199,12 @@ internal class PublicizerSourceGenerator : ISourceGenerator
         indentedWriter.WriteLine($"public {staticOrEmpty}{fieldTypeFullName} {fieldSymbol.Name}");
         indentedWriter.WriteLine("{");
         indentedWriter.Indent++;
+
         GenerateGetSet(indentedWriter, instanceText, memberAccessorInstanceText, fieldSymbol, isGet: true, memberLifetime, memberVisibility);
-        GenerateGetSet(indentedWriter, instanceText, memberAccessorInstanceText, fieldSymbol, isGet: false, memberLifetime, memberVisibility);
+
+        if (!fieldSymbol.IsReadOnly || accessorHandling.HasFlag(AccessorHandling.ForceWriteOnReadonly))
+            GenerateGetSet(indentedWriter, instanceText, memberAccessorInstanceText, fieldSymbol, isGet: false, memberLifetime, memberVisibility);
+
         indentedWriter.Indent--;
         indentedWriter.WriteLine("}");
     }
