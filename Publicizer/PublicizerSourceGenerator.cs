@@ -239,19 +239,24 @@ internal class PublicizerSourceGenerator : ISourceGenerator
 
     private void GenerateGetSet(IndentedTextWriter indentedWriter, string instanceText, string memberAccessorInstanceText, ISymbol memberSymbol, bool isGet, MemberLifetime memberLifetime, MemberVisibility memberVisibility)
     {
-        var memberText = memberSymbol switch
-        {
-            IPropertySymbol => "Property",
-            IFieldSymbol => "Field",
-            _ => throw new ArgumentOutOfRangeException(nameof(memberSymbol), memberSymbol, $"Property or field is needed")
-        };
+        string memberText;
+        string memberTypeFullName;
 
-        var memberTypeFullName = memberSymbol switch
+        switch (memberSymbol)
         {
-            IPropertySymbol propertySymbol => propertySymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-            IFieldSymbol fieldSymbol => fieldSymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-            _ => throw new ArgumentOutOfRangeException(nameof(memberSymbol), memberSymbol, $"Property or field is needed")
-        };
+            case IPropertySymbol propertySymbol:
+                memberText = "Property";
+                memberTypeFullName = propertySymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                break;
+
+            case IFieldSymbol fieldSymbol:
+                memberText = "Field";
+                memberTypeFullName = fieldSymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(memberSymbol), memberSymbol, $"Property or field is needed");
+        }
 
         if (isGet)
         {
