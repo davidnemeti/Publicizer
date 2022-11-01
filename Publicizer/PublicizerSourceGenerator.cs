@@ -33,10 +33,10 @@ internal class PublicizerSourceGenerator : ISourceGenerator
             indentedWriter.WriteLine("#nullable enable annotations");
 
             var typeSymbolToPublicize = (INamedTypeSymbol)publicizeAttributeData.ConstructorArguments[0].Value!;
-            var memberLifetime = (MemberLifetime)publicizeAttributeData.GetPublicizeAttributeNamedArgumentValue(nameof(PublicizeAttribute.MemberLifetime))!;
-            var memberVisibility = (MemberVisibility)publicizeAttributeData.GetPublicizeAttributeNamedArgumentValue(nameof(PublicizeAttribute.MemberVisibility))!;
-            var accessorHandling = (AccessorHandling)publicizeAttributeData.GetPublicizeAttributeNamedArgumentValue(nameof(PublicizeAttribute.AccessorHandling))!;
-            var customMemberAccessorTypeSymbol = (INamedTypeSymbol?)publicizeAttributeData.GetPublicizeAttributeNamedArgumentValue(nameof(PublicizeAttribute.CustomMemberAccessorType));
+            var memberLifetime = publicizeAttributeData.GetPublicizeAttributeNamedArgumentValue(nameof(PublicizeAttribute.MemberLifetime), PublicizeAttribute.DefaultMemberLifetime);
+            var memberVisibility = publicizeAttributeData.GetPublicizeAttributeNamedArgumentValue(nameof(PublicizeAttribute.MemberVisibility), PublicizeAttribute.DefaultMemberVisibility);
+            var accessorHandling = publicizeAttributeData.GetPublicizeAttributeNamedArgumentValue(nameof(PublicizeAttribute.AccessorHandling), PublicizeAttribute.DefaultAccessorHandling);
+            var customMemberAccessorTypeSymbol = publicizeAttributeData.GetPublicizeAttributeNamedArgumentValue<INamedTypeSymbol>(nameof(PublicizeAttribute.CustomMemberAccessorType));
 
             if (proxyTypeSymbol.ContainingNamespace is { IsGlobalNamespace: false } @namespace)
             {

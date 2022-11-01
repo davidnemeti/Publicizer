@@ -9,6 +9,10 @@ namespace Publicizer;
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
 public class PublicizeAttribute : Attribute
 {
+    internal const MemberLifetime DefaultMemberLifetime = MemberLifetime.All;
+    internal const MemberVisibility DefaultMemberVisibility = MemberVisibility.All;
+    internal const AccessorHandling DefaultAccessorHandling = AccessorHandling.KeepOriginal;
+
     /// <summary>
     /// The type of which private members need to be accessed.
     /// </summary>
@@ -17,17 +21,17 @@ public class PublicizeAttribute : Attribute
     /// <summary>
     /// The lifetime of the members which needs to be generated and forwarded.
     /// </summary>
-    public MemberLifetime MemberLifetime { get; init; } = MemberLifetime.All;
+    public MemberLifetime MemberLifetime { get; init; } = DefaultMemberLifetime;
 
     /// <summary>
     /// The visibility of the members which needs to be generated and forwarded.
     /// </summary>
-    public MemberVisibility MemberVisibility { get; init; } = MemberVisibility.All;
+    public MemberVisibility MemberVisibility { get; init; } = DefaultMemberVisibility;
 
     /// <summary>
     /// The handling of generated accessors for fields (readonly vs. read/write) and for properties (<c>get</c> and <c>set</c> accessors).
     /// </summary>
-    public AccessorHandling AccessorHandling { get; init; } = AccessorHandling.KeepOriginal;
+    public AccessorHandling AccessorHandling { get; init; } = DefaultAccessorHandling;
 
     /// <summary>
     /// Optional member accessor type which implements <see cref="IMemberAccessor{T}"/> where the <c>T</c> generic parameter is <see cref="TypeToPublicize"/>.
