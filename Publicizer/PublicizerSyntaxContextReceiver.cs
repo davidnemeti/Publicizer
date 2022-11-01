@@ -1,15 +1,16 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace Publicizer;
 
 internal class PublicizerSyntaxContextReceiver : ISyntaxContextReceiver
 {
-    private List<(INamedTypeSymbol, IReadOnlyList<AttributeData>)> _proxies = new ();
+    private List<(INamedTypeSymbol, IImmutableList<AttributeData>)> _proxies = new ();
 
-    public IReadOnlyList<(INamedTypeSymbol, IReadOnlyList<AttributeData>)> Proxies => _proxies;
+    public IReadOnlyList<(INamedTypeSymbol, IImmutableList<AttributeData>)> Proxies => _proxies;
 
     public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
     {
@@ -22,10 +23,10 @@ internal class PublicizerSyntaxContextReceiver : ISyntaxContextReceiver
         }
     }
 
-    private IReadOnlyList<AttributeData> GetPublicizeAttributes(INamedTypeSymbol namedTypeSymbol) =>
+    private IImmutableList<AttributeData> GetPublicizeAttributes(INamedTypeSymbol namedTypeSymbol) =>
         namedTypeSymbol.GetAttributes()
             .Where(IsPublicizeAttribute)
-            .ToArray();
+            .ToImmutableArray();
 
     private bool IsPublicizeAttribute(AttributeData attributeData) =>
         attributeData.AttributeClass != null &&

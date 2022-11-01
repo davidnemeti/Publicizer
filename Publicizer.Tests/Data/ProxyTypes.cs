@@ -28,22 +28,22 @@ namespace OuterNamespace
         {
         }
 
-        [Publicize(typeof(TypeWithPrivateMembers), accessorHandling: AccessorHandling.ForceReadAndWrite)]
+        [Publicize(typeof(TypeWithPrivateMembers), AccessorHandling = AccessorHandling.ForceReadAndWrite)]
         public partial class ForcedProxy : IForcedProxy
         {
         }
 
-        [Publicize(typeof(TypeWithPrivateMembers), MemberLifetime.Instance)]
+        [Publicize(typeof(TypeWithPrivateMembers), MemberLifetime = MemberLifetime.Instance)]
         public partial class InstanceProxy
         {
         }
 
-        [Publicize(typeof(TypeWithPrivateMembers), MemberLifetime.Static)]
+        [Publicize(typeof(TypeWithPrivateMembers), MemberLifetime = MemberLifetime.Static)]
         public static partial class StaticProxy
         {
         }
 
-        [Publicize(typeof(TypeWithPrivateMembers), accessorHandling: AccessorHandling.ForceReadAndWrite, customMemberAccessorType: typeof(CustomMemberAccessor<TypeWithPrivateMembers>))]
+        [Publicize(typeof(TypeWithPrivateMembers), AccessorHandling = AccessorHandling.ForceReadAndWrite, CustomMemberAccessorType = typeof(CustomMemberAccessor<TypeWithPrivateMembers>))]
         public partial class ForcedProxyWithCustomMemberAccessorType : IForcedProxy
         {
         }
