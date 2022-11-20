@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Reflection;
 
 namespace Publicizer
 {
@@ -14,57 +14,46 @@ namespace Publicizer
         /// <summary>
         /// Gets the value of a field.
         /// </summary>
-        /// <typeparam name="TField">The type of the field.</typeparam>
-        /// <param name="instance">The instance of the type which contains the field. It is <c>null</c> if the field is static.</param>
-        /// <param name="fieldName">The name of the field.</param>
-        /// <param name="fieldLifetime">The lifetime of the field.</param>
-        /// <param name="fieldVisibility">The visibility of the field.</param>
-        /// <returns>The value of the field.</returns>
-        TField GetFieldValue<TField>(T? instance, string fieldName, MemberLifetime fieldLifetime, MemberVisibility fieldVisibility);
+        /// <typeparam name="TField">The type of <paramref name="field"/>.</typeparam>
+        /// <param name="field">The field of <typeparamref name="T"/>.</param>
+        /// <param name="instance">The instance of <typeparamref name="T"/> which contains <paramref name="field"/>. It is <c>null</c> if the field is static.</param>
+        /// <returns>The value of the <paramref name="field"/>.</returns>
+        TField GetValue<TField>(FieldInfo field, T? instance);
 
         /// <summary>
         /// Sets the value of a field.
         /// </summary>
-        /// <typeparam name="TField">The type of the field.</typeparam>
-        /// <param name="instance">The instance of the type which contains the field. It is <c>null</c> if the field is static.</param>
-        /// <param name="fieldName">The name of the field.</param>
-        /// <param name="fieldValue">The new value of the field.</param>
-        /// <param name="fieldLifetime">The lifetime of the field.</param>
-        /// <param name="fieldVisibility">The visibility of the field.</param>
-        void SetFieldValue<TField>(T? instance, string fieldName, TField fieldValue, MemberLifetime fieldLifetime, MemberVisibility fieldVisibility);
+        /// <typeparam name="TField">The type of <paramref name="field"/>.</typeparam>
+        /// <param name="field">The field of <typeparamref name="T"/>.</param>
+        /// <param name="instance">The instance of <typeparamref name="T"/> which contains <paramref name="field"/>. It is <c>null</c> if the field is static.</param>
+        /// <param name="value">The new value of <paramref name="field"/>.</param>
+        void SetValue<TField>(FieldInfo field, T? instance, TField value);
 
         /// <summary>
         /// Gets the value of a property.
         /// </summary>
-        /// <typeparam name="TProperty">The type of the property.</typeparam>
-        /// <param name="instance">The instance of the type which contains the property. It is <c>null</c> if the property is static.</param>
-        /// <param name="propertyName">The name of the property.</param>
-        /// <param name="propertyLifetime">The lifetime of the property.</param>
-        /// <param name="propertyVisibility">The visibility of the property.</param>
-        /// <returns>The value of the property.</returns>
-        TProperty GetPropertyValue<TProperty>(T? instance, string propertyName, MemberLifetime propertyLifetime, MemberVisibility propertyVisibility);
+        /// <typeparam name="TProperty">The type of <paramref name="property"/>.</typeparam>
+        /// <param name="property">The property of <typeparamref name="T"/>.</param>
+        /// <param name="instance">The instance of <typeparamref name="T"/> which contains <paramref name="property"/>. It is <c>null</c> if the property is static.</param>
+        /// <returns>The value of the <paramref name="property"/>.</returns>
+        TProperty GetValue<TProperty>(PropertyInfo property, T? instance);
 
         /// <summary>
         /// Sets the value of a property.
         /// </summary>
-        /// <typeparam name="TProperty">The type of the property.</typeparam>
-        /// <param name="instance">The instance of the type which contains the property. It is <c>null</c> if the property is static.</param>
-        /// <param name="propertyName">The name of the property.</param>
-        /// <param name="propertyValue">The new value of the property.</param>
-        /// <param name="propertyLifetime">The lifetime of the property.</param>
-        /// <param name="propertyVisibility">The visibility of the property.</param>
-        void SetPropertyValue<TProperty>(T? instance, string propertyName, TProperty propertyValue, MemberLifetime propertyLifetime, MemberVisibility propertyVisibility);
+        /// <typeparam name="TProperty">The type of <paramref name="property"/>.</typeparam>
+        /// <param name="property">The field of <typeparamref name="T"/>.</param>
+        /// <param name="instance">The instance of <typeparamref name="T"/> which contains <paramref name="property"/>. It is <c>null</c> if the property is static.</param>
+        /// <param name="value">The new value of <paramref name="property"/>.</param>
+        void SetValue<TProperty>(PropertyInfo property, T? instance, TProperty value);
 
         /// <summary>
         /// Invokes a method.
         /// </summary>
-        /// <param name="instance">The instance of the type which contains the method. It is <c>null</c> if the method is static.</param>
-        /// <param name="methodName">The name of the method.</param>
-        /// <param name="parameterTypes">The types of the parameters of the method.</param>
-        /// <param name="parameterValues">The values of the parameters of the method.</param>
-        /// <param name="methodLifetime">The lifetime of the method.</param>
-        /// <param name="methodVisibility">The visibility of the method.</param>
+        /// <param name="method">The method of <typeparamref name="T"/>.</param>
+        /// <param name="instance">The instance of <typeparamref name="T"/> which contains <paramref name="method"/>. It is <c>null</c> if the method is static.</param>
+        /// <param name="parameterValues">The values of the parameters of <paramref name="method"/>.</param>
         /// <returns></returns>
-        object? InvokeMethod(T? instance, string methodName, Type[] parameterTypes, object[] parameterValues, MemberLifetime methodLifetime, MemberVisibility methodVisibility);
+        object? InvokeMethod(MethodInfo method, T? instance, object[] parameterValues);
     }
 }

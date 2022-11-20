@@ -4,7 +4,7 @@ using OuterNamespace.NamespaceForProxyType;
 
 namespace Publicizer.Tests;
 
-public class AccessTestForProxy : AccessTest
+public class AccessTestForProxy : AccessTest<ForcedProxy>
 {
     public AccessTestForProxy()
         : base(instance => new ForcedProxy(instance))
@@ -12,7 +12,7 @@ public class AccessTestForProxy : AccessTest
     }
 }
 
-public class AccessTestForProxyWithCustomMemberAccessor : AccessTest
+public class AccessTestForProxyWithCustomMemberAccessor : AccessTest<ForcedProxyWithCustomMemberAccessorType>
 {
     public AccessTestForProxyWithCustomMemberAccessor()
         : base(instance => new ForcedProxyWithCustomMemberAccessorType(instance))
@@ -21,13 +21,14 @@ public class AccessTestForProxyWithCustomMemberAccessor : AccessTest
 }
 
 [UseStaticLogger]
-public abstract class AccessTest
+public abstract class AccessTest<TForcedProxy>
+    where TForcedProxy : IForcedProxy
 {
     protected TypeWithPrivateMembers Instance { get; }
     protected IForcedProxy Proxy { get; }
     protected ReflectionMemberAccessor<TypeWithPrivateMembers> ReflectionMemberAccessor { get; }
 
-    protected AccessTest(Func<TypeWithPrivateMembers, IForcedProxy> createProxy)
+    protected AccessTest(Func<TypeWithPrivateMembers, TForcedProxy> createProxy)
     {
         Instance = new();
         Proxy = createProxy(Instance);
@@ -37,7 +38,7 @@ public abstract class AccessTest
     [Fact]
     public void FieldGet()
     {
-        ReflectionMemberAccessor.SetFieldValue(Instance, nameof(ForcedProxy._field), 3, MemberLifetime.All, MemberVisibility.All);
+        ReflectionMemberAccessor.SetFieldValue(Instance, nameof(ForcedProxy._field), 3);
 
         Assert.Equal(3, Proxy._field);
     }
@@ -45,7 +46,7 @@ public abstract class AccessTest
     [Fact]
     public void FieldSet()
     {
-        ReflectionMemberAccessor.SetFieldValue(Instance, nameof(ForcedProxy._field), 3, MemberLifetime.All, MemberVisibility.All);
+        ReflectionMemberAccessor.SetFieldValue(Instance, nameof(ForcedProxy._field), 3);
 
         Proxy._field = 5;
 
@@ -55,7 +56,7 @@ public abstract class AccessTest
     [Fact]
     public void ReadonlyFieldGet()
     {
-        ReflectionMemberAccessor.SetFieldValue(Instance, nameof(ForcedProxy._readonlyField), 3, MemberLifetime.All, MemberVisibility.All);
+        ReflectionMemberAccessor.SetFieldValue(Instance, nameof(ForcedProxy._readonlyField), 3);
 
         Assert.Equal(3, Proxy._readonlyField);
     }
@@ -63,7 +64,7 @@ public abstract class AccessTest
     [Fact]
     public void ReadonlyFieldSet()
     {
-        ReflectionMemberAccessor.SetFieldValue(Instance, nameof(ForcedProxy._readonlyField), 3, MemberLifetime.All, MemberVisibility.All);
+        ReflectionMemberAccessor.SetFieldValue(Instance, nameof(ForcedProxy._readonlyField), 3);
 
         Proxy._readonlyField = 5;
 
@@ -73,7 +74,7 @@ public abstract class AccessTest
     [Fact]
     public void ComplexFieldGet()
     {
-        ReflectionMemberAccessor.SetFieldValue(Instance, nameof(ForcedProxy._complexField), new OtherType(3), MemberLifetime.All, MemberVisibility.All);
+        ReflectionMemberAccessor.SetFieldValue(Instance, nameof(ForcedProxy._complexField), new OtherType(3));
 
         Assert.Equal(3, Proxy._complexField.Number);
     }
@@ -81,7 +82,7 @@ public abstract class AccessTest
     [Fact]
     public void ComplexFieldSet()
     {
-        ReflectionMemberAccessor.SetFieldValue(Instance, nameof(ForcedProxy._complexField), new OtherType(3), MemberLifetime.All, MemberVisibility.All);
+        ReflectionMemberAccessor.SetFieldValue(Instance, nameof(ForcedProxy._complexField), new OtherType(3));
 
         Proxy._complexField = new OtherType(5);
 
@@ -91,7 +92,7 @@ public abstract class AccessTest
     [Fact]
     public void PropertyGet()
     {
-        ReflectionMemberAccessor.SetPropertyValue(Instance, nameof(ForcedProxy._property), 3, MemberLifetime.All, MemberVisibility.All);
+        ReflectionMemberAccessor.SetPropertyValue(Instance, nameof(ForcedProxy._property), 3);
 
         Assert.Equal(3, Proxy._property);
     }
@@ -99,7 +100,7 @@ public abstract class AccessTest
     [Fact]
     public void PropertySet()
     {
-        ReflectionMemberAccessor.SetPropertyValue(Instance, nameof(ForcedProxy._property), 3, MemberLifetime.All, MemberVisibility.All);
+        ReflectionMemberAccessor.SetPropertyValue(Instance, nameof(ForcedProxy._property), 3);
 
         Proxy._property = 5;
 
@@ -109,7 +110,7 @@ public abstract class AccessTest
     [Fact]
     public void ReadonlyPropertyGet()
     {
-        ReflectionMemberAccessor.SetFieldValue(Instance, GetBackingFieldNameFromPropertyName(nameof(ForcedProxy._readonlyProperty)), 3, MemberLifetime.All, MemberVisibility.All);
+        ReflectionMemberAccessor.SetFieldValue(Instance, GetBackingFieldNameFromPropertyName(nameof(ForcedProxy._readonlyProperty)), 3);
 
         Assert.Equal(3, Proxy._readonlyProperty);
     }
@@ -117,7 +118,7 @@ public abstract class AccessTest
     [Fact]
     public void ReadonlyPropertySet()
     {
-        ReflectionMemberAccessor.SetFieldValue(Instance, GetBackingFieldNameFromPropertyName(nameof(ForcedProxy._readonlyProperty)), 3, MemberLifetime.All, MemberVisibility.All);
+        ReflectionMemberAccessor.SetFieldValue(Instance, GetBackingFieldNameFromPropertyName(nameof(ForcedProxy._readonlyProperty)), 3);
 
         Proxy._readonlyProperty = 5;
 
@@ -127,43 +128,43 @@ public abstract class AccessTest
     [Fact]
     public void StaticFieldGet()
     {
-        ReflectionMemberAccessor.SetFieldValue(instance: null, nameof(ForcedProxy.StaticField), 3, MemberLifetime.All, MemberVisibility.All);
+        ReflectionMemberAccessor.SetFieldValue(instance: null, nameof(TForcedProxy.StaticField), 3);
 
-        Assert.Equal(3, ForcedProxy.StaticField);
+        Assert.Equal(3, TForcedProxy.StaticField);
     }
 
     [Fact]
     public void StaticFieldSet()
     {
-        ReflectionMemberAccessor.SetFieldValue(instance: null, nameof(ForcedProxy.StaticField), 3, MemberLifetime.All, MemberVisibility.All);
+        ReflectionMemberAccessor.SetFieldValue(instance: null, nameof(TForcedProxy.StaticField), 3);
 
-        ForcedProxy.StaticField = 5;
+        TForcedProxy.StaticField = 5;
 
-        Assert.Equal(5, ForcedProxy.StaticField);
+        Assert.Equal(5, TForcedProxy.StaticField);
     }
 
     [Fact]
     public void StaticPropertyGet()
     {
-        ReflectionMemberAccessor.SetPropertyValue(instance: null, nameof(ForcedProxy.StaticProperty), 3, MemberLifetime.All, MemberVisibility.All);
+        ReflectionMemberAccessor.SetPropertyValue(instance: null, nameof(TForcedProxy.StaticProperty), 3);
 
-        Assert.Equal(3, ForcedProxy.StaticProperty);
+        Assert.Equal(3, TForcedProxy.StaticProperty);
     }
 
     [Fact]
     public void StaticPropertySet()
     {
-        ReflectionMemberAccessor.SetPropertyValue(instance: null, nameof(ForcedProxy.StaticProperty), 3, MemberLifetime.All, MemberVisibility.All);
+        ReflectionMemberAccessor.SetPropertyValue(instance: null, nameof(TForcedProxy.StaticProperty), 3);
 
-        ForcedProxy.StaticProperty = 5;
+        TForcedProxy.StaticProperty = 5;
 
-        Assert.Equal(5, ForcedProxy.StaticProperty);
+        Assert.Equal(5, TForcedProxy.StaticProperty);
     }
 
     [Fact]
     public void StaticProcedureInvocation()
     {
-        ForcedProxy.StaticProcedure();
+        TForcedProxy.StaticProcedure();
 
         Assert.Collection(StaticLogger.LoggedMethods, method =>
         {
@@ -175,7 +176,7 @@ public abstract class AccessTest
     [Fact]
     public void StaticFunctionInvocation()
     {
-        var result = ForcedProxy.StaticFunction();
+        var result = TForcedProxy.StaticFunction();
 
         Assert.Equal("hello", result);
         Assert.Collection(StaticLogger.LoggedMethods, method =>

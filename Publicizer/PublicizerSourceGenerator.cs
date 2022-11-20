@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -56,22 +57,12 @@ internal class PublicizerSourceGenerator : ISourceGenerator
 
     private void GenerateForwarding(IndentedTextWriter indentedWriter, INamedTypeSymbol proxyTypeSymbol, INamedTypeSymbol typeSymbolToPublicize, MemberLifetime memberLifetime, MemberVisibility memberVisibility, AccessorHandling accessorHandling, INamedTypeSymbol? customMemberAccessorTypeSymbol)
     {
-        // NOTE: The name of the fields are choosen so we can avoid name collisions with the orginial type's members.
+        // NOTE: The name of the fields are choosen so we can avoid name collisions with the original type's members.
         // In case of name collision, one can just simply change the name of the proxy type.
-        var instanceToPublicizeName = $"{proxyTypeSymbol.Name}_{typeSymbolToPublicize.Name}";
-        var memberAccessorInstanceText = $"{proxyTypeSymbol.Name}_{nameof(IMemberAccessor<object>)}";
-
-        var typeToPublicizeFullName = typeSymbolToPublicize.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        var memberAccessorStaticTypeText = $"global::Publicizer.{nameof(IMemberAccessor<object>)}<{typeToPublicizeFullName}>";
-
-        var memberAccessorDynamicTypeText = customMemberAccessorTypeSymbol != null
-            ? customMemberAccessorTypeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
-            : $"global::Publicizer.{nameof(ReflectionMemberAccessor<object>)}<{typeToPublicizeFullName}>";
-
-        var memberAccessorInstantiationText = $"new {memberAccessorDynamicTypeText}()";
+        var namer = new Namer(proxyTypeSymbol, typeSymbolToPublicize, customMemberAccessorTypeSymbol, memberLifetime);
 
         indentedWriter.WriteLine($"/// <summary>");
-        indentedWriter.WriteLine($"/// Proxy type which can be used to access the private members of <see cref=\"{typeToPublicizeFullName}\"/>.");
+        indentedWriter.WriteLine($"""/// Proxy type which can be used to access the private members of <see cref="{namer.TypeToPublicizeFullName}" />.""");
 
         if (memberLifetime.HasFlag(MemberLifetime.Static))
             indentedWriter.WriteLine($"/// Private static members can be accessed through public static members of the proxy type.");
@@ -79,31 +70,36 @@ internal class PublicizerSourceGenerator : ISourceGenerator
         if (memberLifetime.HasFlag(MemberLifetime.Instance))
             indentedWriter.WriteLine($"/// Private instance members can be accessed through public instance members of the proxy type, thus the proxy type needs to be instantiated.");
 
-        indentedWriter.WriteLine($"/// </summary>");
-        indentedWriter.WriteLine($"public partial class {proxyTypeSymbol.Name}");
-        indentedWriter.WriteLine("{");
+        indentedWriter.WriteMultiLine($$"""
+            /// </summary>
+            public partial class {{proxyTypeSymbol.Name}}
+            {
+            """);
         indentedWriter.Indent++;
 
-        indentedWriter.WriteLine($"private static readonly {memberAccessorStaticTypeText} {memberAccessorInstanceText} = {memberAccessorInstantiationText};");
-        indentedWriter.WriteLine();
+        if (customMemberAccessorTypeSymbol is not null)
+        {
+            indentedWriter.WriteLine($"private static readonly {namer.MemberAccessorTypeText} {namer.MemberAccessorInstanceText} = new {namer.MemberAccessorTypeText}();");
+            indentedWriter.WriteLine();
+        }
 
         if (memberLifetime.HasFlag(MemberLifetime.Instance))
         {
-            indentedWriter.WriteLine($"private readonly {typeToPublicizeFullName} {instanceToPublicizeName};");
+            indentedWriter.WriteLine($"private readonly {namer.TypeToPublicizeFullName} {namer.InstanceToPublicizeName};");
             indentedWriter.WriteLine();
 
             const string instanceToPublicizeParameterName = "instanceToPublicize";
 
-            indentedWriter.WriteLine($"/// <summary>");
-            indentedWriter.WriteLine($"/// Creates a proxy instance which can be used to access the private instance members of <paramref name=\"{instanceToPublicizeParameterName}\"/>.");
-            indentedWriter.WriteLine($"/// </summary>");
-            indentedWriter.WriteLine($"/// <param name=\"{instanceToPublicizeParameterName}\">The instance of which private members needs to be accessed.</param>");
-            indentedWriter.WriteLine($"public {proxyTypeSymbol.Name}({typeToPublicizeFullName} {instanceToPublicizeParameterName})");
-            indentedWriter.WriteLine("{");
-            indentedWriter.Indent++;
-            indentedWriter.WriteLine($"this.{instanceToPublicizeName} = {instanceToPublicizeParameterName};");
-            indentedWriter.Indent--;
-            indentedWriter.WriteLine("}");
+            indentedWriter.WriteMultiLine($$"""
+                /// <summary>
+                /// Creates a proxy instance which can be used to access the private instance members of <paramref name="{{instanceToPublicizeParameterName}}" />.
+                /// </summary>
+                /// <param name="{{instanceToPublicizeParameterName}}">The instance of which private members needs to be accessed.</param>
+                public {{proxyTypeSymbol.Name}}({{namer.TypeToPublicizeFullName}} {{instanceToPublicizeParameterName}})
+                {
+                    this.{{namer.InstanceToPublicizeName}} = {{instanceToPublicizeParameterName}};
+                }
+                """);
         }
 
         var methodSymbolsForProperties = typeSymbolToPublicize
@@ -123,23 +119,21 @@ internal class PublicizerSourceGenerator : ISourceGenerator
             if (!MatchMemberLifetime(memberSymbol, memberLifetime) || !MatchMemberVisibility(memberSymbol, memberVisibility))
                 continue;
 
-            var instanceText = memberSymbol.IsStatic ? "null" : $"this.{instanceToPublicizeName}";
-
             switch (memberSymbol)
             {
                 case IPropertySymbol propertySymbol:
                     indentedWriter.WriteLine();
-                    GenerateProperty(indentedWriter, instanceText, memberAccessorInstanceText, propertySymbol, memberLifetime, memberVisibility, accessorHandling, propertyToBackingField);
+                    GenerateProperty(indentedWriter, namer, new Value.Property(propertySymbol, propertyToBackingField), accessorHandling);
                     break;
 
                 case IFieldSymbol fieldSymbol when !fieldSymbol.IsImplicitlyDeclared:
                     indentedWriter.WriteLine();
-                    GenerateField(indentedWriter, instanceText, memberAccessorInstanceText, fieldSymbol, memberLifetime, memberVisibility, accessorHandling);
+                    GenerateField(indentedWriter, namer, new Value.Field(fieldSymbol), accessorHandling);
                     break;
 
                 case IMethodSymbol methodSymbol when !methodSymbol.IsImplicitlyDeclared && !methodSymbolsForProperties.Contains(methodSymbol):
                     indentedWriter.WriteLine();
-                    GenerateMethod(indentedWriter, instanceText, memberAccessorInstanceText, methodSymbol, memberLifetime, memberVisibility);
+                    GenerateMethod(indentedWriter, namer, new Method(methodSymbol));
                     break;
             }
         }
@@ -156,116 +150,253 @@ internal class PublicizerSourceGenerator : ISourceGenerator
         memberVisibility.HasFlag(MemberVisibility.Public) && memberSymbol.DeclaredAccessibility == Accessibility.Public ||
         memberVisibility.HasFlag(MemberVisibility.NonPublic) && memberSymbol.DeclaredAccessibility != Accessibility.Public;
 
-    private void GenerateProperty(IndentedTextWriter indentedWriter, string instanceText, string memberAccessorInstanceText, IPropertySymbol propertySymbol, MemberLifetime memberLifetime, MemberVisibility memberVisibility, AccessorHandling accessorHandling, IImmutableDictionary<IPropertySymbol, IFieldSymbol> propertyToBackingField)
+    private void GenerateProperty(IndentedTextWriter indentedWriter, Namer namer, Value.Property property, AccessorHandling accessorHandling)
     {
-        var propertyTypeFullName = propertySymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        var staticOrEmpty = propertySymbol.IsStatic ? "static " : string.Empty;
+        var staticOrEmpty = property.IsStatic ? "static " : string.Empty;
 
-        indentedWriter.WriteLine($"/// <summary>");
-        indentedWriter.WriteLine($"/// Forwards to property <see cref=\"{propertySymbol.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}.{propertySymbol.Name}\"/>.");
-        indentedWriter.WriteLine($"/// </summary>");
-        indentedWriter.WriteLine($"public {staticOrEmpty}{propertyTypeFullName} {propertySymbol.Name}");
-        indentedWriter.WriteLine("{");
+        Value? valueToRead = property.CanRead || accessorHandling.HasFlag(AccessorHandling.ForceReadOnWriteonly)
+            ? (property.CanRead ? property : property.BackingField)
+            : null;
+
+        Value? valueToWrite = property.CanWrite || accessorHandling.HasFlag(AccessorHandling.ForceWriteOnReadonly)
+            ? (property.CanWrite ? property : property.BackingField)
+            : null;
+
+        if (valueToRead is not null)
+        {
+            GenerateMemberInfo(indentedWriter, namer, valueToRead);
+            GenerateDelegateIfNeeded(indentedWriter, namer, valueToRead, isGet: true);
+        }
+
+        if (valueToWrite is not null)
+        {
+            if (valueToWrite != valueToRead)
+                GenerateMemberInfo(indentedWriter, namer, valueToWrite);
+
+            GenerateDelegateIfNeeded(indentedWriter, namer, valueToWrite, isGet: false);
+        }
+
+        indentedWriter.WriteMultiLine($$"""
+            /// <summary>
+            /// Forwards to property <see cref="{{property.FullName}}" />.
+            /// </summary>
+            public {{staticOrEmpty}}{{property.TypeFullName}} {{property.Name}}
+            {
+            """);
         indentedWriter.Indent++;
 
-        if (propertySymbol.GetMethod is not null || accessorHandling.HasFlag(AccessorHandling.ForceReadOnWriteonly))
-        {
-            if (propertySymbol.GetMethod is not null)
-                GenerateGetSet(indentedWriter, instanceText, memberAccessorInstanceText, propertySymbol, isGet: true, memberLifetime, memberVisibility);
-            else if (propertyToBackingField.TryGetValue(propertySymbol, out var backingFieldSymbol))
-                GenerateGetSet(indentedWriter, instanceText, memberAccessorInstanceText, backingFieldSymbol, isGet: true, memberLifetime, memberVisibility);
-        }
+        if (valueToRead is not null)
+            GenerateGetSet(indentedWriter, namer, valueToRead, isGet: true);
 
-        if (propertySymbol.SetMethod is not null || accessorHandling.HasFlag(AccessorHandling.ForceWriteOnReadonly))
-        {
-            if (propertySymbol.SetMethod is not null)
-                GenerateGetSet(indentedWriter, instanceText, memberAccessorInstanceText, propertySymbol, isGet: false, memberLifetime, memberVisibility);
-            else if (propertyToBackingField.TryGetValue(propertySymbol, out var backingFieldSymbol))
-                GenerateGetSet(indentedWriter, instanceText, memberAccessorInstanceText, backingFieldSymbol, isGet: false, memberLifetime, memberVisibility);
-        }
+        if (valueToWrite is not null)
+            GenerateGetSet(indentedWriter, namer, valueToWrite, isGet: false);
 
         indentedWriter.Indent--;
         indentedWriter.WriteLine("}");
     }
 
-    private void GenerateField(IndentedTextWriter indentedWriter, string instanceText, string memberAccessorInstanceText, IFieldSymbol fieldSymbol, MemberLifetime memberLifetime, MemberVisibility memberVisibility, AccessorHandling accessorHandling)
+    private void GenerateField(IndentedTextWriter indentedWriter, Namer namer, Value.Field field, AccessorHandling accessorHandling)
     {
-        var fieldTypeFullName = fieldSymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        var staticOrEmpty = fieldSymbol.IsStatic ? "static " : string.Empty;
+        var staticOrEmpty = field.IsStatic ? "static " : string.Empty;
+        var shouldWrite = field.CanWrite || accessorHandling.HasFlag(AccessorHandling.ForceWriteOnReadonly);
 
-        indentedWriter.WriteLine($"/// <summary>");
-        indentedWriter.WriteLine($"/// Forwards to field <see cref=\"{fieldSymbol.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}.{fieldSymbol.Name}\"/>.");
-        indentedWriter.WriteLine($"/// </summary>");
-        indentedWriter.WriteLine($"public {staticOrEmpty}{fieldTypeFullName} {fieldSymbol.Name}");
-        indentedWriter.WriteLine("{");
+        GenerateMemberInfo(indentedWriter, namer, field);
+        GenerateDelegateIfNeeded(indentedWriter, namer, field, isGet: true);
+
+        if (shouldWrite)
+            GenerateDelegateIfNeeded(indentedWriter, namer, field, isGet: false);
+
+        indentedWriter.WriteMultiLine($$"""
+            /// <summary>
+            /// Forwards to field <see cref="{{field.FullName}}" />.
+            /// </summary>
+            public {{staticOrEmpty}}{{field.TypeFullName}} {{field.Name}}
+            {
+            """);
         indentedWriter.Indent++;
 
-        GenerateGetSet(indentedWriter, instanceText, memberAccessorInstanceText, fieldSymbol, isGet: true, memberLifetime, memberVisibility);
+        GenerateGetSet(indentedWriter, namer, field, isGet: true);
 
-        if (!fieldSymbol.IsReadOnly || accessorHandling.HasFlag(AccessorHandling.ForceWriteOnReadonly))
-            GenerateGetSet(indentedWriter, instanceText, memberAccessorInstanceText, fieldSymbol, isGet: false, memberLifetime, memberVisibility);
+        if (shouldWrite)
+            GenerateGetSet(indentedWriter, namer, field, isGet: false);
 
         indentedWriter.Indent--;
         indentedWriter.WriteLine("}");
     }
 
-    private void GenerateMethod(IndentedTextWriter indentedWriter, string instanceText, string memberAccessorInstanceText, IMethodSymbol methodSymbol, MemberLifetime memberLifetime, MemberVisibility memberVisibility)
+    private void GenerateMethod(IndentedTextWriter indentedWriter, Namer namer, Method method)
     {
-        var returnTypeFullName = methodSymbol.ReturnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        var staticOrEmpty = methodSymbol.IsStatic ? "static " : string.Empty;
+        var staticOrEmpty = method.IsStatic ? "static " : string.Empty;
 
-        var parametersSignatureText = string.Join(
-            ", ",
-            methodSymbol.Parameters.Select(parameter => $"{parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} {parameter.Name}")
-        );
+        GenerateMemberInfo(indentedWriter, namer, method);
+        GenerateDelegateIfNeeded(indentedWriter, namer, method);
 
-        var parametersTypeText = string.Join(", ", methodSymbol.Parameters.Select(parameter => $"typeof({parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)})"));
-        var parametersTypeXmlDocText = string.Join(", ", methodSymbol.Parameters.Select(parameter => $"{parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}"));
-        var parametersInvocationText = string.Join(", ", methodSymbol.Parameters.Select(parameter => parameter.Name));
+        var parameterNames = method.GetParameterNames().ToImmutableList();
+        var parameterTypesFullNames = method.GetParameterTypesFullNames().ToImmutableArray();
 
-        indentedWriter.WriteLine($"/// <summary>");
-        indentedWriter.WriteLine($"/// Forwards to method <see cref=\"{methodSymbol.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}.{methodSymbol.Name}({parametersTypeXmlDocText})\"/>.");
-        indentedWriter.WriteLine($"/// </summary>");
-        indentedWriter.WriteLine($"public {staticOrEmpty}{returnTypeFullName} {methodSymbol.Name}({parametersSignatureText}) =>");
+        var parametersSignatureText = string.Join(", ", parameterTypesFullNames.Zip(parameterNames, (parameterTypeFullName, parameterName) => $"{parameterTypeFullName} {parameterName}"));
+        var parametersTypeOfText = string.Join(", ", parameterTypesFullNames.Select(parameterTypeFullName => $"typeof({parameterTypeFullName})"));
+        var parametersTypeXmlDocText = string.Join(", ", parameterTypesFullNames);
+
+        indentedWriter.WriteMultiLine($"""
+            /// <summary>
+            /// Forwards to method <see cref="{method.FullName}({parametersTypeXmlDocText})"/>.
+            /// </summary>
+            public {staticOrEmpty}{method.ReturnTypeFullName} {method.Name}({parametersSignatureText}) =>
+            """);
         indentedWriter.Indent++;
 
-        if (!methodSymbol.ReturnsVoid)
-            indentedWriter.Write($"({returnTypeFullName}) ");
-
-        indentedWriter.WriteLine($"{memberAccessorInstanceText}.InvokeMethod({instanceText}, \"{methodSymbol.Name}\", new Type[] {{ {parametersTypeText} }}, new object[] {{ {parametersInvocationText} }}, global::{typeof(MemberLifetime).FullName}.{memberLifetime}, global::{typeof(MemberVisibility).FullName}.{memberVisibility});");
-
-        indentedWriter.Indent--;
-    }
-
-    private void GenerateGetSet(IndentedTextWriter indentedWriter, string instanceText, string memberAccessorInstanceText, ISymbol memberSymbol, bool isGet, MemberLifetime memberLifetime, MemberVisibility memberVisibility)
-    {
-        string memberText;
-        string memberTypeFullName;
-
-        switch (memberSymbol)
+        if (namer.MemberAccessorInstanceText is null)
         {
-            case IPropertySymbol propertySymbol:
-                memberText = "Property";
-                memberTypeFullName = propertySymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                break;
+            var parametersInvocation = parameterNames;
 
-            case IFieldSymbol fieldSymbol:
-                memberText = "Field";
-                memberTypeFullName = fieldSymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                break;
+            if (!method.IsStatic)
+                parametersInvocation = parametersInvocation.Insert(0, namer.GetInstanceText(method));
 
-            default:
-                throw new ArgumentOutOfRangeException(nameof(memberSymbol), memberSymbol, $"Property or field is needed");
-        }
+            var parametersInvocationText = string.Join(", ", parametersInvocation);
 
-        if (isGet)
-        {
-            indentedWriter.WriteLine($"get => {memberAccessorInstanceText}.Get{memberText}Value<{memberTypeFullName}>({instanceText}, \"{memberSymbol.Name}\", global::{typeof(MemberLifetime).FullName}.{memberLifetime}, global::{typeof(MemberVisibility).FullName}.{memberVisibility});");
+            indentedWriter.WriteLine($"{namer.GetInvokeName(method)}({parametersInvocationText});");
         }
         else
         {
-            indentedWriter.WriteLine($"set => {memberAccessorInstanceText}.Set{memberText}Value<{memberTypeFullName}>({instanceText}, \"{memberSymbol.Name}\", value, global::{typeof(MemberLifetime).FullName}.{memberLifetime}, global::{typeof(MemberVisibility).FullName}.{memberVisibility});");
+            var parametersInvocationText = string.Join(", ", parameterNames);
+
+            if (!method.Symbol.ReturnsVoid)
+                indentedWriter.Write($"({method.ReturnTypeFullName}) ");
+
+            indentedWriter.WriteMultiLine($$"""
+                {{namer.MemberAccessorInstanceText}}.InvokeMethod({{namer.GetMethodInfoName(method)}}, {{namer.GetInstanceText(method)}}, new object[] { {{parametersInvocationText}} });
+                """);
         }
+
+        indentedWriter.Indent--;
+    }
+
+    private void GenerateMemberInfo(IndentedTextWriter indentedWriter, Namer namer, Value value)
+    {
+        var memberText = value.Select(field => "Field", property => "Property");
+        var valueInfoName = namer.GetValueInfoName(value);
+        const BindingFlags bindingFlags = BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+
+        indentedWriter.WriteMultiLine($"""
+            private static readonly global::System.Reflection.{memberText}Info {valueInfoName} = typeof({value.ContainingTypeFullName}).Get{memberText}("{value.Name}", (global::{typeof(BindingFlags).FullName}){GetAsText(bindingFlags)});
+
+            """);
+    }
+
+    private void GenerateDelegateIfNeeded(IndentedTextWriter indentedWriter, Namer namer, Value value, bool isGet)
+    {
+        if (namer.MemberAccessorInstanceText is null)
+        {
+            var valueInfoName = namer.GetValueInfoName(value);
+
+            var genericParametersText = value.IsStatic
+                ? value.TypeFullName
+                : $"{value.ContainingTypeFullName}, {value.TypeFullName}";
+
+            if (isGet)
+            {
+                var getterTypeFullName = $"global::System.Func<{genericParametersText}>";
+
+                indentedWriter.WriteMultiLine($"""
+                    private static readonly {getterTypeFullName} {namer.GetValueGetterName(value)} = global::{typeof(MemberInfoHelpers).FullName}.{nameof(MemberInfoHelpers.CreateGetFuncByExpression)}<{getterTypeFullName}>({valueInfoName});
+
+                    """);
+            }
+            else
+            {
+                var createSetActionMethodName = value.CanWrite
+                    ? $"global::{typeof(MemberInfoHelpers).FullName}.{nameof(MemberInfoHelpers.CreateSetActionByExpression)}"
+                    : $"global::Publicizer.MemberInfoHelpersContent.CreateSetActionByEmittingIL";
+
+                var setterTypeFullName = $"global::System.Action<{genericParametersText}>";
+
+                indentedWriter.WriteMultiLine($"""
+                    private static readonly {setterTypeFullName} {namer.GetValueSetterName(value)} = {createSetActionMethodName}<{setterTypeFullName}>({valueInfoName});
+
+                    """);
+            }
+        }
+    }
+
+    private void GenerateMemberInfo(IndentedTextWriter indentedWriter, Namer namer, Method method)
+    {
+        var methodInfoName = namer.GetMethodInfoName(method);
+        var parametersTypeOfText = string.Join(", ", method.GetParameterTypesFullNames().Select(parameterTypeFullName => $"typeof({parameterTypeFullName})"));
+        const BindingFlags bindingFlags = BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+
+        indentedWriter.WriteMultiLine($$"""
+            private static readonly global::{{typeof(MethodInfo).FullName}} {{methodInfoName}} = typeof({{method.ContainingTypeFullName}}).GetMethod("{{method.Name}}", (global::{{typeof(BindingFlags).FullName}}){{GetAsText(bindingFlags)}}, binder: null, new global::{{typeof(Type).FullName}}[] { {{parametersTypeOfText}} }, modifiers: null);
+
+            """);
+    }
+
+    private void GenerateDelegateIfNeeded(IndentedTextWriter indentedWriter, Namer namer, Method method)
+    {
+        if (namer.MemberAccessorInstanceText is null)
+        {
+            var methodInfoName = namer.GetMethodInfoName(method);
+            var genericParameterTypes = method.GetParameterTypesFullNames().ToList();
+
+            if (!method.IsStatic)
+                genericParameterTypes.Insert(0, method.ContainingTypeFullName);
+
+            if (!method.ReturnsVoid)
+                genericParameterTypes.Add(method.ReturnTypeFullName);
+
+            var invokeTypeFullName = $"global::System.{(method.ReturnsVoid ? "Action" : "Func")}" +
+                (genericParameterTypes.Count > 0
+                    ? $"<{string.Join(", ", genericParameterTypes)}>"
+                    : string.Empty);
+
+            indentedWriter.WriteMultiLine($"""
+                private static readonly {invokeTypeFullName} {namer.GetInvokeName(method)} = global::{typeof(MemberInfoHelpers).FullName}.{nameof(MemberInfoHelpers.CreateInvokeByExpression)}<{invokeTypeFullName}>({methodInfoName});
+
+                """);
+        }
+    }
+
+    private void GenerateGetSet(IndentedTextWriter indentedWriter, Namer namer, Value value, bool isGet)
+    {
+        var memberText = value.Select(field => "Field", property => "Property");
+
+        if (namer.MemberAccessorInstanceText is null)
+        {
+            if (isGet)
+            {
+                indentedWriter.Write($"get => {namer.GetValueGetterName(value)}(");
+
+                if (!value.IsStatic)
+                    indentedWriter.Write($"{namer.GetInstanceText(value)}");
+
+                indentedWriter.WriteLine($");");
+            }
+            else
+            {
+                indentedWriter.Write($"set => {namer.GetValueSetterName(value)}(");
+
+                if (!value.IsStatic)
+                    indentedWriter.Write($"{namer.GetInstanceText(value)}, ");
+
+                indentedWriter.WriteLine($"value);");
+            }
+        }
+        else
+        {
+            if (isGet)
+                indentedWriter.WriteLine($"get => {namer.MemberAccessorInstanceText}.GetValue<{value.TypeFullName}>({namer.GetValueInfoName(value)}, {namer.GetInstanceText(value)});");
+            else
+                indentedWriter.WriteLine($"set => {namer.MemberAccessorInstanceText}.SetValue<{value.TypeFullName}>({namer.GetValueInfoName(value)}, {namer.GetInstanceText(value)}, value);");
+        }
+    }
+
+    private string GetAsText(BindingFlags bindingFlags)
+    {
+        var primitiveTexts = bindingFlags
+            .GetFlagsValues()
+            .Select(primitiveBindingFlags => $"global::{typeof(BindingFlags).FullName}.{primitiveBindingFlags}");
+
+        return string.Join(" | ", primitiveTexts);
     }
 
     public void Initialize(GeneratorInitializationContext context)

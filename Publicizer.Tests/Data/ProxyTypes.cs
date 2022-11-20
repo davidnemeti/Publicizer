@@ -21,6 +21,12 @@ namespace OuterNamespace
             void Procedure();
             void Procedure(int a);
             void Procedure(int a, OtherType otherType);
+
+            static abstract int StaticField { get; set; }
+            static abstract int StaticProperty { get; set; }
+
+            static abstract void StaticProcedure();
+            static abstract string StaticFunction();
         }
 
         [Publicize(typeof(TypeWithPrivateMembers))]
@@ -43,7 +49,7 @@ namespace OuterNamespace
         {
         }
 
-        [Publicize(typeof(TypeWithPrivateMembers), AccessorHandling = AccessorHandling.ForceReadAndWrite, CustomMemberAccessorType = typeof(CustomMemberAccessor<TypeWithPrivateMembers>))]
+        [Publicize(typeof(TypeWithPrivateMembers), AccessorHandling = AccessorHandling.ForceReadAndWrite, CustomMemberAccessorType = typeof(ReflectionMemberAccessor<TypeWithPrivateMembers>))]
         public partial class ForcedProxyWithCustomMemberAccessorType : IForcedProxy
         {
         }

@@ -1,12 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!--
+      As of 2022 November, source generator projects cannot be multitarget project; it can only be a .NET Standard 2.0 project.
+      In order to properly access IL emitting AssemblyBuilder and DynamicMethod classes without using any nuget packages, we would like here
+        <TargetFrameworks>net48;net6.0</TargetFrameworks>
+      instead of
+        <TargetFramework>netstandard2.0</TargetFramework>
+    -->
     <TargetFramework>netstandard2.0</TargetFramework>
-    <LangVersion>10.0</LangVersion>
+    <LangVersion>11.0</LangVersion>
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Version>1.0.3</Version>
+    <Version>2.0.0</Version>
     <Authors>Dávid Németi</Authors>
     <Description>Access private members with compile-time safety.</Description>
     <PackageTags>SourceGenerator;Reflection;PrivateMembers;Typesafety;CompileTimeSafety;Proxy</PackageTags>
@@ -20,6 +27,14 @@
       <IncludeBuildOutput>false</IncludeBuildOutput>
     -->
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="MemberInfoHelpersContent.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="MemberInfoHelpersContent.cs" BuildAction="Compile" />
+  </ItemGroup>
 
   <ItemGroup>
     <!-- Package the generator in the analyzer directory of the nuget package -->

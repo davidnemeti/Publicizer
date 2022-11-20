@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Reflection;
 
 namespace Publicizer
 {
@@ -7,39 +7,24 @@ namespace Publicizer
     /// </summary>
     /// <typeparam name="T">The type which has the members.</typeparam>
     /// <remarks>
-    /// It is the default member accessor logic, if no custom member accessor is given.
-    /// It is used by the forwarding code of the generated public members inside the proxy class to access the (typically private) members of the original class (<typeparamref name="T"/>).
+    /// It can be used by the forwarding code of the generated public members inside the proxy class to access the (typically private) members
+    /// of the original class (<typeparamref name="T"/>).
     /// </remarks>
     public class ReflectionMemberAccessor<T> : IMemberAccessor<T>
     {
         /// <inheritdoc />
-        public TField GetFieldValue<TField>(T? instance, string fieldName, MemberLifetime memberLifetime, MemberVisibility memberVisibility) =>
-            (TField)typeof(T)
-                .GetField(fieldName, memberLifetime.ToBindingFlags() | memberVisibility.ToBindingFlags())
-                .GetValue(instance);
+        public TField GetValue<TField>(FieldInfo field, T? instance) => (TField) field.GetValue(instance);
 
         /// <inheritdoc />
-        public void SetFieldValue<TField>(T? instance, string fieldName, TField fieldValue, MemberLifetime memberLifetime, MemberVisibility memberVisibility) =>
-            typeof(T)
-                .GetField(fieldName, memberLifetime.ToBindingFlags() | memberVisibility.ToBindingFlags())
-                .SetValue(instance, fieldValue);
+        public void SetValue<TField>(FieldInfo field, T? instance, TField value) => field.SetValue(instance, value);
 
         /// <inheritdoc />
-        public TProperty GetPropertyValue<TProperty>(T? instance, string fieldName, MemberLifetime memberLifetime, MemberVisibility memberVisibility) =>
-            (TProperty)typeof(T)
-                .GetProperty(fieldName, memberLifetime.ToBindingFlags() | memberVisibility.ToBindingFlags())
-                .GetValue(instance);
+        public TProperty GetValue<TProperty>(PropertyInfo property, T? instance) => (TProperty) property.GetValue(instance);
 
         /// <inheritdoc />
-        public void SetPropertyValue<TProperty>(T? instance, string fieldName, TProperty propertyValue, MemberLifetime memberLifetime, MemberVisibility memberVisibility) =>
-            typeof(T)
-                .GetProperty(fieldName, memberLifetime.ToBindingFlags() | memberVisibility.ToBindingFlags())
-                .SetValue(instance, propertyValue);
+        public void SetValue<TProperty>(PropertyInfo property, T? instance, TProperty value) => property.SetValue(instance, value);
 
         /// <inheritdoc />
-        public object? InvokeMethod(T? instance, string methodName, Type[] parameterTypes, object[] parameterValues, MemberLifetime memberLifetime, MemberVisibility memberVisibility) =>
-            typeof(T)
-                .GetMethod(methodName, memberLifetime.ToBindingFlags() | memberVisibility.ToBindingFlags(), binder: null, parameterTypes, modifiers: null)
-                .Invoke(instance, parameterValues);
+        public object? InvokeMethod(MethodInfo method, T? instance, object[] parameterValues) => method.Invoke(instance, parameterValues);
     }
 }
