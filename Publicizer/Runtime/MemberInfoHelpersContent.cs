@@ -18,7 +18,6 @@ namespace Publicizer.Runtime
         {
             // NOTE: this method works for setting readonly fields too
 
-            // TODO: create one, single assembly for all of the generated methods (should be passed as parameter to CreateSetActionByEmittingIL)
             var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("DynamicMethodAssembly"), AssemblyBuilderAccess.Run);
             var moduleBuilder = assemblyBuilder.DefineDynamicModule("MainModule");
 
