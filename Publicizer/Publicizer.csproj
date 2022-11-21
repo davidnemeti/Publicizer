@@ -11,6 +11,10 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>11.0</LangVersion>
     <Nullable>enable</Nullable>
+    <DefineConstants>NULLABLE_CHECK_FOR_INCLUDED_CODE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Version>2.0.0</Version>
@@ -20,20 +24,16 @@
     <PackageLicenseExpression>LGPL-3.0-only</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/davidnemeti/Publicizer</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-
-    <!--
-      We want to include the build output as a lib dependency, because although we do not need the source generator during runtime, however we do need the attribute.
-      Thus, we do not apply the following:
-      <IncludeBuildOutput>false</IncludeBuildOutput>
-    -->
+    <DevelopmentDependency>true</DevelopmentDependency>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="MemberInfoHelpersContent.cs" />
+    <Compile Remove="Runtime\MemberInfoHelpersContent.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="MemberInfoHelpersContent.cs" BuildAction="Compile" />
+    <Content Include="Annotation\**\*.cs" BuildAction="Compile" />
+    <Content Include="Runtime\**\*.cs" BuildAction="Compile" />
   </ItemGroup>
 
   <ItemGroup>
@@ -43,10 +43,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="IsExternalInit" Version="1.0.3">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.0.1" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3">
       <PrivateAssets>all</PrivateAssets>

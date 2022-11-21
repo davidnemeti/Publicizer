@@ -1,4 +1,5 @@
-﻿using Publicizer;
+﻿using Publicizer.Annotation;
+using Publicizer.Runtime;
 using NamespaceForTypeWithPrivateMembers;
 using NamespaceForOtherTypes;
 

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
+using Publicizer.Annotation;
+using Publicizer.Runtime;
 
-namespace Publicizer
+namespace Publicizer.Compilation
 {
     internal class Namer
     {

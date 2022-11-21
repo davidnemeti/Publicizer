@@ -1,6 +1,6 @@
-﻿using Architect.AmbientContexts;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Reflection;
+using Architect.AmbientContexts;
 
 namespace NamespaceForTypeWithPrivateMembers;
 

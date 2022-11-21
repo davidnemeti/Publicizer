@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
-namespace Publicizer
+namespace Publicizer.Compilation
 {
     internal abstract class Member
     {
@@ -57,7 +56,7 @@ namespace Publicizer
             {
                 Field field => fieldSelector(field),
                 Property property => propertySelector(property),
-                _ => throw new InvalidOperationException($"{typeof(Field)} or {typeof(Property)} is needed instead of '{this.GetType()}'")
+                _ => throw new InvalidOperationException($"{typeof(Field)} or {typeof(Property)} is needed instead of '{GetType()}'")
             };
 
         internal sealed class Field : Value

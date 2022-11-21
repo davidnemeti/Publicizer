@@ -1,3 +1,4 @@
+using Publicizer.Runtime;
 using NamespaceForOtherTypes;
 using NamespaceForTypeWithPrivateMembers;
 using OuterNamespace.NamespaceForProxyType;
@@ -26,7 +27,7 @@ public abstract class AccessTest<TForcedProxy>
 {
     protected TypeWithPrivateMembers Instance { get; }
     protected IForcedProxy Proxy { get; }
-    protected ReflectionMemberAccessor<TypeWithPrivateMembers> ReflectionMemberAccessor { get; }
+    protected private ReflectionMemberAccessor<TypeWithPrivateMembers> ReflectionMemberAccessor { get; }
 
     protected AccessTest(Func<TypeWithPrivateMembers, TForcedProxy> createProxy)
     {

@@ -1,12 +1,19 @@
-﻿using System;
+﻿// NOTE: This file will be included in the receiver project as source code, so we disable nullable warning context when used from the receiver project,
+// because nullable behavior changes too frequently between different .NET versions, and we do not want this code to fail at compile time due to nullable problems.
+#if !NULLABLE_CHECK_FOR_INCLUDED_CODE
+#nullable enable annotations
+#nullable disable warnings
+#endif
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace Publicizer
+namespace Publicizer.Runtime
 {
-    public static class MemberInfoHelpers
+    internal static class MemberInfoHelpers
     {
         public static IEnumerable<TEnum> GetFlagsValues<TEnum>(this TEnum enumValue)
             where TEnum : Enum =>
@@ -30,8 +37,8 @@ namespace Publicizer
             }
             else
             {
-                var instance = Expression.Parameter(fieldInfo.ReflectedType, "instance");
-                body = Expression.Field(Expression.Convert(instance, fieldInfo.DeclaringType), fieldInfo);
+                var instance = Expression.Parameter(fieldInfo.ReflectedType!, "instance");
+                body = Expression.Field(Expression.Convert(instance, fieldInfo.DeclaringType!), fieldInfo);
                 parameters = new[] { instance };
             }
 
@@ -54,8 +61,8 @@ namespace Publicizer
             }
             else
             {
-                var instance = Expression.Parameter(propertyInfo.ReflectedType, "instance");
-                body = Expression.Property(Expression.Convert(instance, propertyInfo.DeclaringType), propertyInfo);
+                var instance = Expression.Parameter(propertyInfo.ReflectedType!, "instance");
+                body = Expression.Property(Expression.Convert(instance, propertyInfo.DeclaringType!), propertyInfo);
                 parameters = new[] { instance };
             }
 
@@ -84,11 +91,11 @@ namespace Publicizer
             }
             else
             {
-                var instance = Expression.Parameter(fieldInfo.ReflectedType, "instance");
+                var instance = Expression.Parameter(fieldInfo.ReflectedType!, "instance");
                 var value = Expression.Parameter(fieldInfo.FieldType, "value");
 
                 body = Expression.Assign(
-                    Expression.Field(Expression.Convert(instance, fieldInfo.DeclaringType), fieldInfo),
+                    Expression.Field(Expression.Convert(instance, fieldInfo.DeclaringType!), fieldInfo),
                     Expression.Convert(value, fieldInfo.FieldType)
                 );
 
@@ -118,15 +125,15 @@ namespace Publicizer
                     Expression.Convert(value, propertyInfo.PropertyType)
                 );
 
-                parameters = new[] {  value };
+                parameters = new[] { value };
             }
             else
             {
-                var instance = Expression.Parameter(propertyInfo.ReflectedType, "instance");
+                var instance = Expression.Parameter(propertyInfo.ReflectedType!, "instance");
                 var value = Expression.Parameter(propertyInfo.PropertyType, "value");
 
                 body = Expression.Assign(
-                    Expression.Property(Expression.Convert(instance, propertyInfo.DeclaringType), propertyInfo),
+                    Expression.Property(Expression.Convert(instance, propertyInfo.DeclaringType!), propertyInfo),
                     Expression.Convert(value, propertyInfo.PropertyType)
                 );
 
@@ -153,7 +160,7 @@ namespace Publicizer
             }
             else
             {
-                var instance = Expression.Parameter(methodInfo.ReflectedType, "instance");
+                var instance = Expression.Parameter(methodInfo.ReflectedType!, "instance");
 
                 var methodParameters = methodInfo
                     .GetParameters()
@@ -161,7 +168,7 @@ namespace Publicizer
                     .ToArray();
 
                 body = Expression.Call(
-                    Expression.Convert(instance, methodInfo.DeclaringType),
+                    Expression.Convert(instance, methodInfo.DeclaringType!),
                     methodInfo,
                     methodParameters
                 );
@@ -170,7 +177,7 @@ namespace Publicizer
             }
 
             return typeof(TDelegate) == typeof(Delegate)
-                ? (TDelegate) Expression.Lambda(body, parameters).Compile()
+                ? (TDelegate)Expression.Lambda(body, parameters).Compile()
                 : Expression.Lambda<TDelegate>(body, parameters).Compile();
         }
     }

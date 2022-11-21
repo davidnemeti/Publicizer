@@ -23,9 +23,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Publicizer\Publicizer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
-    <!-- NOTE: when PackageReference is being used, then MemberInfoHelpersContent.cs is included automatically, but here we need to include it manually. -->
-    <Compile Include="..\Publicizer\MemberInfoHelpersContent.cs" />
+    <ProjectReference Include="..\Publicizer\Publicizer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <!-- NOTE: when PackageReference is being used, then Annotation and Runtime files are being included automatically, but here we need to include them manually. -->
+    <Compile Include="..\Publicizer\Annotation\**\*.cs" />
+    <Compile Include="..\Publicizer\Runtime\**\*.cs" />
   </ItemGroup>
 
 </Project>

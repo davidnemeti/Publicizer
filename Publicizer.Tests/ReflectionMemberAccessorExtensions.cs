@@ -1,8 +1,9 @@
 ﻿using System.Reflection;
+using Publicizer.Runtime;
 
 namespace Publicizer.Tests;
 
-public static class ReflectionMemberAccessorExtensions
+internal static class ReflectionMemberAccessorExtensions
 {
     private const BindingFlags s_bindingFlags = BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 

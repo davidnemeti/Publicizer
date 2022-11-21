@@ -8,8 +8,10 @@ using System.Reflection;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using Publicizer.Annotation;
+using Publicizer.Runtime;
 
-namespace Publicizer;
+namespace Publicizer.Compilation;
 
 [Generator]
 internal class PublicizerSourceGenerator : ISourceGenerator
@@ -32,6 +34,7 @@ internal class PublicizerSourceGenerator : ISourceGenerator
         using (var indentedWriter = new IndentedTextWriter(stringWriter))
         {
             indentedWriter.WriteLine("#nullable enable annotations");
+            indentedWriter.WriteLine("#nullable disable warnings");
 
             var typeSymbolToPublicize = (INamedTypeSymbol)publicizeAttributeData.ConstructorArguments[0].Value!;
             var memberLifetime = publicizeAttributeData.GetPublicizeAttributeNamedArgumentValue(nameof(PublicizeAttribute.MemberLifetime), PublicizeAttribute.DefaultMemberLifetime);
@@ -155,11 +158,11 @@ internal class PublicizerSourceGenerator : ISourceGenerator
         var staticOrEmpty = property.IsStatic ? "static " : string.Empty;
 
         Value? valueToRead = property.CanRead || accessorHandling.HasFlag(AccessorHandling.ForceReadOnWriteonly)
-            ? (property.CanRead ? property : property.BackingField)
+            ? property.CanRead ? property : property.BackingField
             : null;
 
         Value? valueToWrite = property.CanWrite || accessorHandling.HasFlag(AccessorHandling.ForceWriteOnReadonly)
-            ? (property.CanWrite ? property : property.BackingField)
+            ? property.CanWrite ? property : property.BackingField
             : null;
 
         if (valueToRead is not null)
@@ -307,7 +310,7 @@ internal class PublicizerSourceGenerator : ISourceGenerator
             {
                 var createSetActionMethodName = value.CanWrite
                     ? $"global::{typeof(MemberInfoHelpers).FullName}.{nameof(MemberInfoHelpers.CreateSetActionByExpression)}"
-                    : $"global::Publicizer.MemberInfoHelpersContent.CreateSetActionByEmittingIL";
+                    : $"global::Publicizer.Runtime.MemberInfoHelpersContent.CreateSetActionByEmittingIL";
 
                 var setterTypeFullName = $"global::System.Action<{genericParametersText}>";
 

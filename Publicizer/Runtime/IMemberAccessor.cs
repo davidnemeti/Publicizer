@@ -1,6 +1,13 @@
-﻿using System.Reflection;
+﻿// NOTE: This file will be included in the receiver project as source code, so we disable nullable warning context when used from the receiver project,
+// because nullable behavior changes too frequently between different .NET versions, and we do not want this code to fail at compile time due to nullable problems.
+#if !NULLABLE_CHECK_FOR_INCLUDED_CODE
+#nullable enable annotations
+#nullable disable warnings
+#endif
 
-namespace Publicizer
+using System.Reflection;
+
+namespace Publicizer.Runtime
 {
     /// <summary>
     /// The member accessor logic to access the members of a type during runtime.
@@ -9,7 +16,7 @@ namespace Publicizer
     /// <remarks>
     /// It is used by the forwarding code of the generated public members inside the proxy class to access the (typically private) members of the original class (<typeparamref name="T"/>).
     /// </remarks>
-    public interface IMemberAccessor<T>
+    internal interface IMemberAccessor<T>
     {
         /// <summary>
         /// Gets the value of a field.

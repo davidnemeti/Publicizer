@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using Microsoft.CodeAnalysis;
 
-namespace Publicizer
+namespace Publicizer.Compilation
 {
     internal static class CodeAnalysisExtensions
     {

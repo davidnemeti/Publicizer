@@ -1,13 +1,20 @@
-﻿using System;
+﻿// NOTE: This file will be included in the receiver project as source code, so we disable nullable warning context when used from the receiver project,
+// because nullable behavior changes too frequently between different .NET versions, and we do not want this code to fail at compile time due to nullable problems.
+#if !NULLABLE_CHECK_FOR_INCLUDED_CODE
+#nullable enable annotations
+#nullable disable warnings
+#endif
+
+using System;
 using System.Reflection;
 
-namespace Publicizer;
+namespace Publicizer.Annotation;
 
 /// <summary>
 /// Lifetime of members inside a type.
 /// </summary>
 [Flags]
-public enum MemberLifetime
+internal enum MemberLifetime
 {
     /// <summary>
     /// Static lifetime.
@@ -29,7 +36,7 @@ public enum MemberLifetime
 /// Visibility of members inside a type.
 /// </summary>
 [Flags]
-public enum MemberVisibility
+internal enum MemberVisibility
 {
     /// <summary>
     /// Public visibility.
@@ -51,7 +58,7 @@ public enum MemberVisibility
 /// Handling of accessors for fields (readonly vs. read/write) and for properties (<c>get</c> and <c>set</c> accessors).
 /// </summary>
 [Flags]
-public enum AccessorHandling
+internal enum AccessorHandling
 {
     /// <summary>
     /// Keep everything as in the original class.
