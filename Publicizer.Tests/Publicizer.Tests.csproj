@@ -25,8 +25,12 @@
   <ItemGroup>
     <ProjectReference Include="..\Publicizer\Publicizer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <!-- NOTE: when PackageReference is being used, then Annotation and Runtime files are being included automatically, but here we need to include them manually. -->
-    <Compile Include="..\Publicizer\Annotation\**\*.cs" />
-    <Compile Include="..\Publicizer\Runtime\**\*.cs" />
+    <Compile Include="..\Publicizer\Annotation\**\*.cs">
+      <Link>Annotation\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="..\Publicizer\Runtime\**\*.cs">
+      <Link>Runtime\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
   </ItemGroup>
 
 </Project>
