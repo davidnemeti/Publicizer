@@ -10,17 +10,10 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.13.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Publicizer\Publicizer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-    <!-- NOTE: when PackageReference is being used, then Annotation and Runtime files are being included automatically, but here we need to include them manually. -->
-    <Compile Include="..\Publicizer\Annotation\**\*.cs">
-      <Link>Annotation\%(RecursiveDir)%(Filename)%(Extension)</Link>
-    </Compile>
-    <Compile Include="..\Publicizer\Runtime\**\*.cs">
-      <Link>Runtime\%(RecursiveDir)%(Filename)%(Extension)</Link>
-    </Compile>
+    <PackageReference Include="Publicizer" Version="2.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
