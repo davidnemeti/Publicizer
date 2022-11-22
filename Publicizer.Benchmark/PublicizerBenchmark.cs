@@ -1,8 +1,12 @@
 ﻿
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Jobs;
 
 namespace Publicizer.Benchmark;
 
+[SimpleJob(runtimeMoniker: RuntimeMoniker.Net48)]
+[SimpleJob(runtimeMoniker: RuntimeMoniker.Net70)]
 public class PublicizerBenchmark_OriginalType
 {
     private readonly OriginalType Instance = new ();
@@ -95,6 +99,8 @@ public class PublicizerBenchmark_OriginalType
     public string FunctionInvocationWithTwoParameter() => Instance.Function(5, new OtherType(8));
 }
 
+[SimpleJob(runtimeMoniker: RuntimeMoniker.Net48)]
+[SimpleJob(runtimeMoniker: RuntimeMoniker.Net70)]
 public class PublicizerBenchmark_ForcedProxy
 {
     private readonly ForcedProxy Instance = new (new OriginalType());
@@ -199,6 +205,8 @@ public class PublicizerBenchmark_ForcedProxy
     public string FunctionInvocationWithTwoParameter() => Instance.Function(5, new OtherType(8));
 }
 
+[SimpleJob(runtimeMoniker: RuntimeMoniker.Net48)]
+[SimpleJob(runtimeMoniker: RuntimeMoniker.Net70)]
 public class PublicizerBenchmark_ForcedProxyWithCustomMemberAccessorType
 {
     private readonly ForcedProxyWithCustomMemberAccessorType Instance = new (new OriginalType());

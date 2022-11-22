@@ -6,6 +6,8 @@
 <#@ output extension=".cs" #>
 
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Jobs;
 
 namespace Publicizer.Benchmark;
 <#
@@ -20,6 +22,8 @@ namespace Publicizer.Benchmark;
     {
 #>
 
+[SimpleJob(runtimeMoniker: RuntimeMoniker.Net48)]
+[SimpleJob(runtimeMoniker: RuntimeMoniker.Net70)]
 public class PublicizerBenchmark_<#= type #>
 {
     private readonly <#= type #> Instance = new (<# if (type != "OriginalType") { #>new OriginalType()<# } #>);

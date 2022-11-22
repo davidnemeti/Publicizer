@@ -13,7 +13,6 @@ public class OriginalType
 
     public static void StaticProcedure()
     {
-        Console.WriteLine("hello");
     }
 
     public static string StaticFunction()
@@ -23,7 +22,6 @@ public class OriginalType
 
     public void Procedure()
     {
-        Console.WriteLine("hello");
     }
 
     public string Function()
@@ -33,7 +31,6 @@ public class OriginalType
 
     public void Procedure(int a)
     {
-        Console.WriteLine("hello");
     }
 
     public string Function(int a)
@@ -43,7 +40,6 @@ public class OriginalType
 
     public void Procedure(int a, OtherType otherType)
     {
-        Console.WriteLine("hello");
     }
 
     public string Function(int a, OtherType otherType)
