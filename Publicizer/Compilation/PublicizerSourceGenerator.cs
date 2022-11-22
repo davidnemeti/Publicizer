@@ -232,7 +232,7 @@ internal class PublicizerSourceGenerator : ISourceGenerator
         var staticOrEmpty = method.IsStatic ? "static " : string.Empty;
 
         GenerateMemberInfo(indentedWriter, namer, method);
-        GenerateDelegateIfNeeded(indentedWriter, namer, method);
+        GenerateDelegateIfNeeded(indentedWriter, namer, method, out var useTypelessDelegate);
 
         var parameterNames = method.GetParameterNames().ToImmutableList();
         var parameterTypesFullNames = method.GetParameterTypesFullNames().ToImmutableArray();
@@ -258,7 +258,12 @@ internal class PublicizerSourceGenerator : ISourceGenerator
 
             var parametersInvocationText = string.Join(", ", parametersInvocation);
 
-            indentedWriter.WriteLine($"{namer.GetInvokeName(method)}({parametersInvocationText});");
+            if (useTypelessDelegate && !method.Symbol.ReturnsVoid)
+                indentedWriter.Write($"({method.ReturnTypeFullName}) ");
+            indentedWriter.Write($"{namer.GetInvokeName(method)}");
+            if (useTypelessDelegate)
+                indentedWriter.Write($".{nameof(Delegate.DynamicInvoke)}");
+            indentedWriter.WriteLine($"({parametersInvocationText});");
         }
         else
         {
@@ -334,7 +339,7 @@ internal class PublicizerSourceGenerator : ISourceGenerator
             """);
     }
 
-    private void GenerateDelegateIfNeeded(IndentedTextWriter indentedWriter, Namer namer, Method method)
+    private void GenerateDelegateIfNeeded(IndentedTextWriter indentedWriter, Namer namer, Method method, out bool useTypelessDelegate)
     {
         if (namer.MemberAccessorInstanceText is null)
         {
@@ -344,19 +349,25 @@ internal class PublicizerSourceGenerator : ISourceGenerator
             if (!method.IsStatic)
                 genericParameterTypes.Insert(0, method.ContainingTypeFullName);
 
+            useTypelessDelegate = genericParameterTypes.Count > 16;
+
             if (!method.ReturnsVoid)
                 genericParameterTypes.Add(method.ReturnTypeFullName);
 
-            var invokeTypeFullName = $"global::System.{(method.ReturnsVoid ? "Action" : "Func")}" +
-                (genericParameterTypes.Count > 0
-                    ? $"<{string.Join(", ", genericParameterTypes)}>"
-                    : string.Empty);
+            var invokeTypeFullName = useTypelessDelegate
+                ? "global::System.Delegate"
+                : $"global::System.{(method.ReturnsVoid ? "Action" : "Func")}" +
+                    (genericParameterTypes.Count > 0
+                        ? $"<{string.Join(", ", genericParameterTypes)}>"
+                        : string.Empty);
 
             indentedWriter.WriteMultiLine($"""
                 private static readonly {invokeTypeFullName} {namer.GetInvokeName(method)} = global::{typeof(MemberInfoHelpers).FullName}.{nameof(MemberInfoHelpers.CreateInvokeByExpression)}<{invokeTypeFullName}>({methodInfoName});
 
                 """);
         }
+        else
+            useTypelessDelegate = false;
     }
 
     private void GenerateGetSet(IndentedTextWriter indentedWriter, Namer namer, Value value, bool isGet)
