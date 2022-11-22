@@ -26,7 +26,7 @@ public abstract class AccessTest<TForcedProxy>
     where TForcedProxy : IForcedProxy
 {
     protected TypeWithPrivateMembers Instance { get; }
-    protected IForcedProxy Proxy { get; }
+    protected TForcedProxy Proxy { get; }
     protected private ReflectionMemberAccessor<TypeWithPrivateMembers> ReflectionMemberAccessor { get; }
 
     protected AccessTest(Func<TypeWithPrivateMembers, TForcedProxy> createProxy)
