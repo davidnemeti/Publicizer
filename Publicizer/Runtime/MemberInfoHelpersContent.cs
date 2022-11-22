@@ -47,7 +47,7 @@ namespace Publicizer.Runtime
             gen.Emit(OpCodes.Stfld, fieldInfo);
             gen.Emit(OpCodes.Ret);
 
-            return method.CreateDelegate<TDelegate>();
+            return (TDelegate)method.CreateDelegate(typeof(TDelegate));
         }
     }
 }

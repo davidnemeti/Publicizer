@@ -5,34 +5,37 @@ using OuterNamespace.NamespaceForProxyType;
 
 namespace Publicizer.Tests;
 
-public class AccessTestForProxy : AccessTest<ForcedProxy>
+public class AccessTestForProxy : AccessTest<ForcedProxy, ForcedProxyStatic>
 {
     public AccessTestForProxy()
-        : base(instance => new ForcedProxy(instance))
+        : base(instance => new ForcedProxy(instance), () => new ForcedProxyStatic())
     {
     }
 }
 
-public class AccessTestForProxyWithCustomMemberAccessor : AccessTest<ForcedProxyWithCustomMemberAccessorType>
+public class AccessTestForProxyWithCustomMemberAccessor : AccessTest<ForcedProxyWithCustomMemberAccessorType, ForcedProxyWithCustomMemberAccessorTypeStatic>
 {
     public AccessTestForProxyWithCustomMemberAccessor()
-        : base(instance => new ForcedProxyWithCustomMemberAccessorType(instance))
+        : base(instance => new ForcedProxyWithCustomMemberAccessorType(instance), () => new ForcedProxyWithCustomMemberAccessorTypeStatic())
     {
     }
 }
 
 [UseStaticLogger]
-public abstract class AccessTest<TForcedProxy>
+public abstract class AccessTest<TForcedProxy, TForcedProxyStatic>
     where TForcedProxy : IForcedProxy
+    where TForcedProxyStatic : IForcedProxyStatic
 {
     protected TypeWithPrivateMembers Instance { get; }
     protected TForcedProxy Proxy { get; }
+    protected TForcedProxyStatic StaticProxy { get; }
     protected private ReflectionMemberAccessor<TypeWithPrivateMembers> ReflectionMemberAccessor { get; }
 
-    protected AccessTest(Func<TypeWithPrivateMembers, TForcedProxy> createProxy)
+    protected AccessTest(Func<TypeWithPrivateMembers, TForcedProxy> createProxy, Func<TForcedProxyStatic> createStaticProxy)
     {
         Instance = new();
         Proxy = createProxy(Instance);
+        StaticProxy = createStaticProxy();
         ReflectionMemberAccessor = new ReflectionMemberAccessor<TypeWithPrivateMembers>();
     }
 
@@ -129,43 +132,43 @@ public abstract class AccessTest<TForcedProxy>
     [Fact]
     public void StaticFieldGet()
     {
-        ReflectionMemberAccessor.SetFieldValue(instance: null, nameof(TForcedProxy.StaticField), 3);
+        ReflectionMemberAccessor.SetFieldValue(instance: null, nameof(ForcedProxyStatic.StaticField), 3);
 
-        Assert.Equal(3, TForcedProxy.StaticField);
+        Assert.Equal(3, StaticProxy.StaticField);
     }
 
     [Fact]
     public void StaticFieldSet()
     {
-        ReflectionMemberAccessor.SetFieldValue(instance: null, nameof(TForcedProxy.StaticField), 3);
+        ReflectionMemberAccessor.SetFieldValue(instance: null, nameof(ForcedProxyStatic.StaticField), 3);
 
-        TForcedProxy.StaticField = 5;
+        StaticProxy.StaticField = 5;
 
-        Assert.Equal(5, TForcedProxy.StaticField);
+        Assert.Equal(5, StaticProxy.StaticField);
     }
 
     [Fact]
     public void StaticPropertyGet()
     {
-        ReflectionMemberAccessor.SetPropertyValue(instance: null, nameof(TForcedProxy.StaticProperty), 3);
+        ReflectionMemberAccessor.SetPropertyValue(instance: null, nameof(ForcedProxyStatic.StaticProperty), 3);
 
-        Assert.Equal(3, TForcedProxy.StaticProperty);
+        Assert.Equal(3, StaticProxy.StaticProperty);
     }
 
     [Fact]
     public void StaticPropertySet()
     {
-        ReflectionMemberAccessor.SetPropertyValue(instance: null, nameof(TForcedProxy.StaticProperty), 3);
+        ReflectionMemberAccessor.SetPropertyValue(instance: null, nameof(ForcedProxyStatic.StaticProperty), 3);
 
-        TForcedProxy.StaticProperty = 5;
+        StaticProxy.StaticProperty = 5;
 
-        Assert.Equal(5, TForcedProxy.StaticProperty);
+        Assert.Equal(5, StaticProxy.StaticProperty);
     }
 
     [Fact]
     public void StaticProcedureInvocation()
     {
-        TForcedProxy.StaticProcedure();
+        StaticProxy.StaticProcedure();
 
         Assert.Collection(StaticLogger.LoggedMethods, method =>
         {
@@ -177,7 +180,7 @@ public abstract class AccessTest<TForcedProxy>
     [Fact]
     public void StaticFunctionInvocation()
     {
-        var result = TForcedProxy.StaticFunction();
+        var result = StaticProxy.StaticFunction();
 
         Assert.Equal("hello", result);
         Assert.Collection(StaticLogger.LoggedMethods, method =>

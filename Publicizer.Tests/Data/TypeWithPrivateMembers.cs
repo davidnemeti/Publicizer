@@ -1,4 +1,5 @@
 ﻿using NamespaceForOtherTypes;
+using Publicizer.Tests;
 
 namespace NamespaceForTypeWithPrivateMembers;
 
