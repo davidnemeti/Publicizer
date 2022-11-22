@@ -28,6 +28,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- NOTE: MemberInfoHelpersContent uses API which is not available in .NET Standard 2.0, so we need to remove it from Compile item list -->
     <Compile Remove="Runtime\MemberInfoHelpersContent.cs" />
   </ItemGroup>
 
