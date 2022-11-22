@@ -1,0 +1,142 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+
+using BenchmarkDotNet.Attributes;
+
+namespace Publicizer.Benchmark;
+<#
+    var types = new []
+    {
+        "OriginalType",
+        "ForcedProxy",
+        "ForcedProxyWithCustomMemberAccessorType",
+    };
+
+    foreach (var type in types)
+    {
+#>
+
+public class PublicizerBenchmark_<#= type #>
+{
+    private readonly <#= type #> Instance = new (<# if (type != "OriginalType") { #>new OriginalType()<# } #>);
+
+    [Benchmark]
+    public int FieldGet() => Instance.Field;
+
+    [Benchmark]
+    public void FieldSet()
+    {
+        Instance.Field = 5;
+    }
+
+    [Benchmark]
+    public int ReadonlyFieldGet() => Instance.ReadonlyField;
+
+<#
+    if (type != "OriginalType")
+    {
+#>
+    [Benchmark]
+    public void ReadonlyFieldSet()
+    {
+        Instance.ReadonlyField = 5;
+    }
+
+<#
+    }
+#>
+    [Benchmark]
+    public OtherType ComplexFieldGet() => Instance.ComplexField;
+
+    [Benchmark]
+    public void ComplexFieldSet()
+    {
+        Instance.ComplexField = new OtherType(5);
+    }
+
+    [Benchmark]
+    public int PropertyGet() => Instance.Property;
+
+    [Benchmark]
+    public void PropertySet()
+    {
+        Instance.Property = 5;
+    }
+
+    [Benchmark]
+    public int ReadonlyPropertyGet() => Instance.ReadonlyProperty;
+
+<#
+    if (type != "OriginalType")
+    {
+#>
+    [Benchmark]
+    public void ReadonlyPropertySet()
+    {
+        Instance.ReadonlyProperty = 5;
+    }
+
+<#
+    }
+#>
+    [Benchmark]
+    public int StaticFieldGet() => <#= type #>.StaticField;
+
+    [Benchmark]
+    public void StaticFieldSet()
+    {
+        <#= type #>.StaticField = 5;
+    }
+
+    [Benchmark]
+    public int StaticPropertyGet() => <#= type #>.StaticProperty;
+
+    [Benchmark]
+    public void StaticPropertySet()
+    {
+        <#= type #>.StaticProperty = 5;
+    }
+
+    [Benchmark]
+    public void StaticProcedureInvocation()
+    {
+        <#= type #>.StaticProcedure();
+    }
+
+    [Benchmark]
+    public string StaticFunctionInvocation() => <#= type #>.StaticFunction();
+
+    [Benchmark]
+    public void ProcedureInvocation()
+    {
+        Instance.Procedure();
+    }
+
+    [Benchmark]
+    public string FunctionInvocation() => Instance.Function();
+
+    [Benchmark]
+    public void ProcedureInvocationWithOneParameter()
+    {
+        Instance.Procedure(5);
+    }
+
+    [Benchmark]
+    public string FunctionInvocationWithOneParameter() => Instance.Function(5);
+
+    [Benchmark]
+    public void ProcedureInvocationWithTwoParameter()
+    {
+        Instance.Procedure(5, new OtherType(8));
+    }
+
+    [Benchmark]
+    public string FunctionInvocationWithTwoParameter() => Instance.Function(5, new OtherType(8));
+}
+<#
+    }
+#>

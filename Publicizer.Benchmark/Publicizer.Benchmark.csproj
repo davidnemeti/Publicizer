@@ -13,7 +13,33 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Publicizer.Tests\Publicizer.Tests.csproj" />
+    <ProjectReference Include="..\Publicizer\Publicizer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <!-- NOTE: when PackageReference is being used, then Annotation and Runtime files are being included automatically, but here we need to include them manually. -->
+    <Compile Include="..\Publicizer\Annotation\**\*.cs">
+      <Link>Annotation\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="..\Publicizer\Runtime\**\*.cs">
+      <Link>Runtime\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="PublicizerBenchmark.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>PublicizerBenchmark.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="PublicizerBenchmark.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>PublicizerBenchmark.tt</DependentUpon>
+    </Compile>
   </ItemGroup>
 
 </Project>

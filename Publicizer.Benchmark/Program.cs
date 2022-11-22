@@ -1,35 +1,10 @@
-﻿using NamespaceForOtherTypes;
-using NamespaceForTypeWithPrivateMembers;
-using OuterNamespace.NamespaceForProxyType;
+﻿using BenchmarkDotNet.Running;
+using Publicizer.Benchmark;
+using System.Reflection;
 
-var instance = new TypeWithPrivateMembers();
-
-var proxy = new Proxy(instance);
-
-Console.WriteLine($"_field = {proxy._field}");
-
-Console.WriteLine($"_property = {proxy._property}");
-proxy._property++;
-Console.WriteLine($"_property = {proxy._property}");
-
-Console.WriteLine($"_readonlyProperty = {proxy._readonlyProperty}");
-
-Console.WriteLine(proxy.Function());
-Console.WriteLine(proxy.Function(15));
-Console.WriteLine(proxy.Function(15, new OtherType(77)));
-
-proxy.Procedure();
-proxy.Procedure(15);
-proxy.Procedure(15, new OtherType(77));
-
-Console.WriteLine($"StaticField = {StaticProxy.StaticField}");
-StaticProxy.StaticField++;
-Console.WriteLine($"StaticField = {StaticProxy.StaticField}");
-
-Console.WriteLine($"StaticProperty = {StaticProxy.StaticProperty}");
-StaticProxy.StaticProperty++;
-Console.WriteLine($"StaticProperty = {StaticProxy.StaticProperty}");
-
-Console.WriteLine(StaticProxy.StaticFunction());
-
-StaticProxy.StaticProcedure();
+BenchmarkRunner.Run(new[]
+{
+    typeof(PublicizerBenchmark_OriginalType),
+    typeof(PublicizerBenchmark_ForcedProxy),
+    typeof(PublicizerBenchmark_ForcedProxyWithCustomMemberAccessorType)
+});
