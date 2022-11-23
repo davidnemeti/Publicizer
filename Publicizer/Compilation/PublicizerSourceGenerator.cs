@@ -355,7 +355,7 @@ internal class PublicizerSourceGenerator : ISourceGenerator
                 genericParameterTypes.Add(method.ReturnTypeFullName);
 
             var invokeTypeFullName = useTypelessDelegate
-                ? "global::System.Delegate"
+                ? $"global::{typeof(Delegate).FullName}"
                 : $"global::System.{(method.ReturnsVoid ? "Action" : "Func")}" +
                     (genericParameterTypes.Count > 0
                         ? $"<{string.Join(", ", genericParameterTypes)}>"

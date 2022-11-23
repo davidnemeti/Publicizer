@@ -1,5 +1,6 @@
 ﻿// NOTE: This file will be included in the receiver project as source code, so we disable nullable warning context when used from the receiver project,
 // because nullable behavior changes too frequently between different .NET versions, and we do not want this code to fail at compile time due to nullable problems.
+// Also, we should avoid using the newest C# language features, if they are not necessary (like "file-scoped namespace").
 #if !NULLABLE_CHECK_FOR_INCLUDED_CODE
 #nullable enable annotations
 #nullable disable warnings
@@ -8,104 +9,105 @@
 using System;
 using System.Reflection;
 
-namespace Publicizer.Annotation;
-
-/// <summary>
-/// Lifetime of members inside a type.
-/// </summary>
-[Flags]
-internal enum MemberLifetime
+namespace Publicizer.Annotation
 {
     /// <summary>
-    /// Static lifetime.
+    /// Lifetime of members inside a type.
     /// </summary>
-    Static = 1 << 1,
-
-    /// <summary>
-    /// Instance lifetime.
-    /// </summary>
-    Instance = 1 << 2,
-
-    /// <summary>
-    /// Represents all lifetimes.
-    /// </summary>
-    All = Static | Instance
-}
-
-/// <summary>
-/// Visibility of members inside a type.
-/// </summary>
-[Flags]
-internal enum MemberVisibility
-{
-    /// <summary>
-    /// Public visibility.
-    /// </summary>
-    Public = 1 << 1,
-
-    /// <summary>
-    /// Non-public visibility (e.g. private, internal, etc.).
-    /// </summary>
-    NonPublic = 1 << 2,
-
-    /// <summary>
-    /// Represents all visibilities.
-    /// </summary>
-    All = Public | NonPublic
-}
-
-/// <summary>
-/// Handling of accessors for fields (readonly vs. read/write) and for properties (<c>get</c> and <c>set</c> accessors).
-/// </summary>
-[Flags]
-internal enum AccessorHandling
-{
-    /// <summary>
-    /// Keep everything as in the original class.
-    /// </summary>
-    KeepOriginal = 0,
-
-    /// <summary>
-    /// Readonly fields and readonly auto-implemented properties will be writable through the proxy.
-    /// </summary>
-    ForceWriteOnReadonly = 1 << 1,
-
-    /// <summary>
-    /// Writeonly fields and writeonly auto-implemented properties will be readable through the proxy.
-    /// </summary>
-    ForceReadOnWriteonly = 1 << 2,
-
-    /// <summary>
-    /// Combination of <see cref="ForceWriteOnReadonly"/> and <see cref="ForceReadOnWriteonly"/>.
-    /// </summary>
-    ForceReadAndWrite = ForceWriteOnReadonly | ForceReadOnWriteonly,
-}
-
-internal static class MemberTraitsConverterExtensions
-{
-    public static BindingFlags ToBindingFlags(this MemberLifetime memberLifetime)
+    [Flags]
+    internal enum MemberLifetime
     {
-        var bindingFlags = default(BindingFlags);
+        /// <summary>
+        /// Static lifetime.
+        /// </summary>
+        Static = 1 << 1,
 
-        if (memberLifetime.HasFlag(MemberLifetime.Static))
-            bindingFlags |= BindingFlags.Static;
+        /// <summary>
+        /// Instance lifetime.
+        /// </summary>
+        Instance = 1 << 2,
 
-        if (memberLifetime.HasFlag(MemberLifetime.Instance))
-            bindingFlags |= BindingFlags.Instance;
-
-        return bindingFlags;
+        /// <summary>
+        /// Represents all lifetimes.
+        /// </summary>
+        All = Static | Instance
     }
 
-    public static BindingFlags ToBindingFlags(this MemberVisibility memberVisibility)
+    /// <summary>
+    /// Visibility of members inside a type.
+    /// </summary>
+    [Flags]
+    internal enum MemberVisibility
     {
-        var bindingFlags = default(BindingFlags);
+        /// <summary>
+        /// Public visibility.
+        /// </summary>
+        Public = 1 << 1,
 
-        if (memberVisibility.HasFlag(MemberVisibility.Public))
-            bindingFlags |= BindingFlags.Public;
+        /// <summary>
+        /// Non-public visibility (e.g. private, internal, etc.).
+        /// </summary>
+        NonPublic = 1 << 2,
 
-        if (memberVisibility.HasFlag(MemberVisibility.NonPublic))
-            bindingFlags |= BindingFlags.NonPublic;
+        /// <summary>
+        /// Represents all visibilities.
+        /// </summary>
+        All = Public | NonPublic
+    }
 
-        return bindingFlags;
+    /// <summary>
+    /// Handling of accessors for fields (readonly vs. read/write) and for properties (<c>get</c> and <c>set</c> accessors).
+    /// </summary>
+    [Flags]
+    internal enum AccessorHandling
+    {
+        /// <summary>
+        /// Keep everything as in the original class.
+        /// </summary>
+        KeepOriginal = 0,
+
+        /// <summary>
+        /// Readonly fields and readonly auto-implemented properties will be writable through the proxy.
+        /// </summary>
+        ForceWriteOnReadonly = 1 << 1,
+
+        /// <summary>
+        /// Writeonly fields and writeonly auto-implemented properties will be readable through the proxy.
+        /// </summary>
+        ForceReadOnWriteonly = 1 << 2,
+
+        /// <summary>
+        /// Combination of <see cref="ForceWriteOnReadonly"/> and <see cref="ForceReadOnWriteonly"/>.
+        /// </summary>
+        ForceReadAndWrite = ForceWriteOnReadonly | ForceReadOnWriteonly,
+    }
+
+    internal static class MemberTraitsConverterExtensions
+    {
+        public static BindingFlags ToBindingFlags(this MemberLifetime memberLifetime)
+        {
+            var bindingFlags = default(BindingFlags);
+
+            if (memberLifetime.HasFlag(MemberLifetime.Static))
+                bindingFlags |= BindingFlags.Static;
+
+            if (memberLifetime.HasFlag(MemberLifetime.Instance))
+                bindingFlags |= BindingFlags.Instance;
+
+            return bindingFlags;
+        }
+
+        public static BindingFlags ToBindingFlags(this MemberVisibility memberVisibility)
+        {
+            var bindingFlags = default(BindingFlags);
+
+            if (memberVisibility.HasFlag(MemberVisibility.Public))
+                bindingFlags |= BindingFlags.Public;
+
+            if (memberVisibility.HasFlag(MemberVisibility.NonPublic))
+                bindingFlags |= BindingFlags.NonPublic;
+
+            return bindingFlags;
+        }
     }
 }
