@@ -8,7 +8,7 @@ public partial class ForcedProxy
 {
 }
 
-[Publicize(typeof(OriginalType), AccessorHandling = AccessorHandling.ForceReadAndWrite, CustomMemberAccessorType = typeof(ReflectionMemberAccessor<OriginalType>))]
+[Publicize(typeof(OriginalType), AccessorHandling = AccessorHandling.ForceReadAndWrite, CustomMemberAccessorType = typeof(ReflectionMemberAccessor))]
 public partial class ForcedProxyWithCustomMemberAccessorType
 {
 }
