@@ -1,5 +1,5 @@
-﻿using NamespaceForOtherTypes;
-using Publicizer.Tests;
+﻿using Publicizer.Tests.Helpers;
+using NamespaceForOtherTypes;
 
 namespace NamespaceForTypeWithPrivateMembers;
 

@@ -2,7 +2,7 @@
 using System.Reflection;
 using Publicizer.Tests.AmbientScoping;
 
-namespace Publicizer.Tests;
+namespace Publicizer.Tests.Helpers;
 
 public class StaticLogger : AmbientScope<StaticLogger>
 {

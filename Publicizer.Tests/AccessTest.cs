@@ -1,4 +1,6 @@
 using Publicizer.Runtime;
+using Publicizer.Tests.Helpers;
+using Publicizer.Tests.Data;
 using NamespaceForOtherTypes;
 using NamespaceForTypeWithPrivateMembers;
 using OuterNamespace.NamespaceForProxyType;

@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using Publicizer.Runtime;
 
-namespace Publicizer.Tests;
+namespace Publicizer.Tests.Helpers;
 
 internal static class ReflectionMemberAccessorExtensions
 {

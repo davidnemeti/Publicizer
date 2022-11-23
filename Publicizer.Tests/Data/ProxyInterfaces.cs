@@ -1,6 +1,6 @@
 ﻿using NamespaceForOtherTypes;
 
-namespace Publicizer.Tests;
+namespace Publicizer.Tests.Data;
 
 public interface IForcedProxy
 {

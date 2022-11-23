@@ -1,6 +1,6 @@
 ﻿using OuterNamespace.NamespaceForProxyType;
 
-namespace Publicizer.Tests;
+namespace Publicizer.Tests.Data;
 
 public class ForcedProxyStatic : IForcedProxyStatic
 {

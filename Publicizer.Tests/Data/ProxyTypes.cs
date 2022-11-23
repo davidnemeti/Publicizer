@@ -1,8 +1,7 @@
 ﻿using Publicizer.Annotation;
 using Publicizer.Runtime;
+using Publicizer.Tests.Data;
 using NamespaceForTypeWithPrivateMembers;
-using NamespaceForOtherTypes;
-using Publicizer.Tests;
 
 // NOTE: embedded namespaces are intentional to test the code generation
 namespace OuterNamespace

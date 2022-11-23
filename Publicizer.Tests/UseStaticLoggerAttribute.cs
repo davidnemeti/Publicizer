@@ -1,6 +1,6 @@
-﻿using NamespaceForTypeWithPrivateMembers;
-using System.Reflection;
+﻿using System.Reflection;
 using Xunit.Sdk;
+using Publicizer.Tests.Helpers;
 
 namespace Publicizer.Tests;
 
