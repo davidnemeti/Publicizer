@@ -101,17 +101,17 @@ proxy.Procedure(18);
 To **access** the **static** members of the original type through the proxy type, the static members of the proxy type can be used:
 
 ```csharp
-StaticProxy.StaticField = 38;
-StaticProxy.StaticField++;
-Console.WriteLine($"StaticField = {StaticProxy.StaticField}");
+Proxy.StaticField = 38;
+Proxy.StaticField++;
+Console.WriteLine($"StaticField = {Proxy.StaticField}");
 
-StaticProxy.StaticProperty = 42;
-StaticProxy.StaticProperty++;
-Console.WriteLine($"StaticProperty = {StaticProxy.StaticProperty}");
+Proxy.StaticProperty = 42;
+Proxy.StaticProperty++;
+Console.WriteLine($"StaticProperty = {Proxy.StaticProperty}");
 
-Console.WriteLine(StaticProxy.StaticFunction(15));
+Console.WriteLine(Proxy.StaticFunction(15));
 
-StaticProxy.StaticProcedure(18);
+Proxy.StaticProcedure(18);
 ```
 
 ### The generated code
