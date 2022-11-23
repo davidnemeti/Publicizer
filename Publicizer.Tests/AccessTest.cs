@@ -172,10 +172,9 @@ public abstract class AccessTest<TForcedProxy, TForcedProxyStatic>
     {
         StaticProxy.StaticProcedure();
 
-        Assert.Collection(StaticLogger.LoggedMethods, method =>
+        Assert.Collection(StaticLogger.LoggedMemberNames, memberName =>
         {
-            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
-            Assert.Equal("Void StaticProcedure()", method.ToString());
+            Assert.Equal("StaticProcedure", memberName);
         });
     }
 
@@ -184,10 +183,9 @@ public abstract class AccessTest<TForcedProxy, TForcedProxyStatic>
     {
         StaticProxy.StaticProcedureWith16Parameters(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
 
-        Assert.Collection(StaticLogger.LoggedMethods, method =>
+        Assert.Collection(StaticLogger.LoggedMemberNames, memberName =>
         {
-            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
-            Assert.Equal($"Void StaticProcedureWith16Parameters({string.Join(", ", Enumerable.Range(1, 16).Select(i => "Int32"))})", method.ToString());
+            Assert.Equal("StaticProcedureWith16Parameters", memberName);
         });
     }
 
@@ -196,10 +194,9 @@ public abstract class AccessTest<TForcedProxy, TForcedProxyStatic>
     {
         StaticProxy.StaticProcedureWith17Parameters(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17);
 
-        Assert.Collection(StaticLogger.LoggedMethods, method =>
+        Assert.Collection(StaticLogger.LoggedMemberNames, memberName =>
         {
-            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
-            Assert.Equal($"Void StaticProcedureWith17Parameters({string.Join(", ", Enumerable.Range(1, 17).Select(i => "Int32"))})", method.ToString());
+            Assert.Equal("StaticProcedureWith17Parameters", memberName);
         });
     }
 
@@ -209,10 +206,9 @@ public abstract class AccessTest<TForcedProxy, TForcedProxyStatic>
         var result = StaticProxy.StaticFunction();
 
         Assert.Equal("hello", result);
-        Assert.Collection(StaticLogger.LoggedMethods, method =>
+        Assert.Collection(StaticLogger.LoggedMemberNames, memberName =>
         {
-            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
-            Assert.Equal("System.String StaticFunction()", method.ToString());
+            Assert.Equal("StaticFunction", memberName);
         });
     }
 
@@ -222,10 +218,9 @@ public abstract class AccessTest<TForcedProxy, TForcedProxyStatic>
         var result = StaticProxy.StaticFunctionWith16Parameters(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
 
         Assert.Equal(136, result);
-        Assert.Collection(StaticLogger.LoggedMethods, method =>
+        Assert.Collection(StaticLogger.LoggedMemberNames, memberName =>
         {
-            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
-            Assert.Equal($"Int32 StaticFunctionWith16Parameters({string.Join(", ", Enumerable.Range(1, 16).Select(i => "Int32"))})", method.ToString());
+            Assert.Equal("StaticFunctionWith16Parameters", memberName);
         });
     }
 
@@ -235,10 +230,9 @@ public abstract class AccessTest<TForcedProxy, TForcedProxyStatic>
         var result = StaticProxy.StaticFunctionWith17Parameters(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17);
 
         Assert.Equal(153, result);
-        Assert.Collection(StaticLogger.LoggedMethods, method =>
+        Assert.Collection(StaticLogger.LoggedMemberNames, memberName =>
         {
-            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
-            Assert.Equal($"Int32 StaticFunctionWith17Parameters({string.Join(", ", Enumerable.Range(1, 17).Select(i => "Int32"))})", method.ToString());
+            Assert.Equal("StaticFunctionWith17Parameters", memberName);
         });
     }
 
@@ -247,10 +241,9 @@ public abstract class AccessTest<TForcedProxy, TForcedProxyStatic>
     {
         Proxy.Procedure();
 
-        Assert.Collection(StaticLogger.LoggedMethods, method =>
+        Assert.Collection(StaticLogger.LoggedMemberNames, memberName =>
         {
-            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
-            Assert.Equal("Void Procedure()", method.ToString());
+            Assert.Equal("Procedure", memberName);
         });
     }
 
@@ -259,10 +252,9 @@ public abstract class AccessTest<TForcedProxy, TForcedProxyStatic>
     {
         Proxy.Procedure(5);
 
-        Assert.Collection(StaticLogger.LoggedMethods, method =>
+        Assert.Collection(StaticLogger.LoggedMemberNames, memberName =>
         {
-            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
-            Assert.Equal("Void Procedure(Int32)", method.ToString());
+            Assert.Equal("Procedure", memberName);
         });
     }
 
@@ -271,10 +263,9 @@ public abstract class AccessTest<TForcedProxy, TForcedProxyStatic>
     {
         Proxy.Procedure(5, new OtherType(8));
 
-        Assert.Collection(StaticLogger.LoggedMethods, method =>
+        Assert.Collection(StaticLogger.LoggedMemberNames, memberName =>
         {
-            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
-            Assert.Equal("Void Procedure(Int32, NamespaceForOtherTypes.OtherType)", method.ToString());
+            Assert.Equal("Procedure", memberName);
         });
     }
 
@@ -283,10 +274,9 @@ public abstract class AccessTest<TForcedProxy, TForcedProxyStatic>
     {
         Proxy.ProcedureWith15Parameters(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
 
-        Assert.Collection(StaticLogger.LoggedMethods, method =>
+        Assert.Collection(StaticLogger.LoggedMemberNames, memberName =>
         {
-            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
-            Assert.Equal($"Void ProcedureWith15Parameters({string.Join(", ", Enumerable.Range(1, 15).Select(i => "Int32"))})", method.ToString());
+            Assert.Equal("ProcedureWith15Parameters", memberName);
         });
     }
 
@@ -295,10 +285,9 @@ public abstract class AccessTest<TForcedProxy, TForcedProxyStatic>
     {
         Proxy.ProcedureWith16Parameters(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
 
-        Assert.Collection(StaticLogger.LoggedMethods, method =>
+        Assert.Collection(StaticLogger.LoggedMemberNames, memberName =>
         {
-            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
-            Assert.Equal($"Void ProcedureWith16Parameters({string.Join(", ", Enumerable.Range(1, 16).Select(i => "Int32"))})", method.ToString());
+            Assert.Equal("ProcedureWith16Parameters", memberName);
         });
     }
 
@@ -308,10 +297,9 @@ public abstract class AccessTest<TForcedProxy, TForcedProxyStatic>
         var result = Proxy.Function();
 
         Assert.Equal("hello", result);
-        Assert.Collection(StaticLogger.LoggedMethods, method =>
+        Assert.Collection(StaticLogger.LoggedMemberNames, memberName =>
         {
-            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
-            Assert.Equal("System.String Function()", method.ToString());
+            Assert.Equal("Function", memberName);
         });
     }
 
@@ -321,10 +309,9 @@ public abstract class AccessTest<TForcedProxy, TForcedProxyStatic>
         var result = Proxy.Function(5);
 
         Assert.Equal("5", result);
-        Assert.Collection(StaticLogger.LoggedMethods, method =>
+        Assert.Collection(StaticLogger.LoggedMemberNames, memberName =>
         {
-            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
-            Assert.Equal("System.String Function(Int32)", method.ToString());
+            Assert.Equal("Function", memberName);
         });
     }
 
@@ -334,10 +321,9 @@ public abstract class AccessTest<TForcedProxy, TForcedProxyStatic>
         var result = Proxy.Function(5, new OtherType(8));
 
         Assert.Equal("5, 8", result);
-        Assert.Collection(StaticLogger.LoggedMethods, method =>
+        Assert.Collection(StaticLogger.LoggedMemberNames, memberName =>
         {
-            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
-            Assert.Equal("System.String Function(Int32, NamespaceForOtherTypes.OtherType)", method.ToString());
+            Assert.Equal("Function", memberName);
         });
     }
 
@@ -347,10 +333,9 @@ public abstract class AccessTest<TForcedProxy, TForcedProxyStatic>
         var result = Proxy.FunctionWith15Parameters(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
 
         Assert.Equal(120, result);
-        Assert.Collection(StaticLogger.LoggedMethods, method =>
+        Assert.Collection(StaticLogger.LoggedMemberNames, memberName =>
         {
-            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
-            Assert.Equal($"Int32 FunctionWith15Parameters({string.Join(", ", Enumerable.Range(1, 15).Select(i => "Int32"))})", method.ToString());
+            Assert.Equal("FunctionWith15Parameters", memberName);
         });
     }
 
@@ -360,10 +345,9 @@ public abstract class AccessTest<TForcedProxy, TForcedProxyStatic>
         var result = Proxy.FunctionWith16Parameters(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
 
         Assert.Equal(136, result);
-        Assert.Collection(StaticLogger.LoggedMethods, method =>
+        Assert.Collection(StaticLogger.LoggedMemberNames, memberName =>
         {
-            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
-            Assert.Equal($"Int32 FunctionWith16Parameters({string.Join(", ", Enumerable.Range(1, 16).Select(i => "Int32"))})", method.ToString());
+            Assert.Equal("FunctionWith16Parameters", memberName);
         });
     }
 

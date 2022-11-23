@@ -1,24 +1,24 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Publicizer.Tests.AmbientScoping;
 
 namespace Publicizer.Tests.Helpers;
 
 public class StaticLogger : AmbientScope<StaticLogger>
 {
-    private readonly List<MethodBase> _loggedMethods;
+    private readonly List<string> _loggedMemberNames;
 
-    public static IReadOnlyList<MethodBase> LoggedMethods => CurrentNotNull._loggedMethods;
+    public static IReadOnlyList<string> LoggedMemberNames => CurrentNotNull._loggedMemberNames;
 
     public StaticLogger()
     {
-        _loggedMethods = ParentScope?._loggedMethods ?? new();
+        _loggedMemberNames = ParentScope?._loggedMemberNames ?? new();
     }
 
-    public static void Log()
+    public static void Log([CallerMemberName] string memberName = "")
     {
-        var methodToLog = new StackTrace().GetFrame(1)!.GetMethod()!;
-        CurrentNotNull._loggedMethods.Add(methodToLog);
+        CurrentNotNull._loggedMemberNames.Add(memberName);
     }
 
     protected static StaticLogger CurrentNotNull => Current ?? throw new InvalidOperationException($"No active {nameof(StaticLogger)} scope");
