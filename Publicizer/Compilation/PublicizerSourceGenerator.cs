@@ -66,6 +66,7 @@ internal class PublicizerSourceGenerator : ISourceGenerator
         {
             indentedWriter.WriteLine("#nullable enable annotations");
             indentedWriter.WriteLine("#nullable disable warnings");
+            indentedWriter.WriteLine();
 
             var typeSymbolToPublicize = (INamedTypeSymbol)publicizeAttributeData.ConstructorArguments[0].Value!;
             var memberLifetime = publicizeAttributeData.GetPublicizeAttributeNamedArgumentValue(nameof(PublicizeAttribute.MemberLifetime), PublicizeAttribute.DefaultMemberLifetime);
@@ -230,7 +231,7 @@ internal class PublicizerSourceGenerator : ISourceGenerator
             /// <summary>
             /// Forwards to property <see cref="{{property.FullName}}" />.
             /// </summary>
-            public {{staticOrEmpty}}{{property.TypeFullName}} {{property.Name}}
+            public {{staticOrEmpty}}{{property.TypeFullNameWithNullableSupport}} {{property.Name}}
             {
             """);
         indentedWriter.Indent++;
@@ -260,7 +261,7 @@ internal class PublicizerSourceGenerator : ISourceGenerator
             /// <summary>
             /// Forwards to field <see cref="{{field.FullName}}" />.
             /// </summary>
-            public {{staticOrEmpty}}{{field.TypeFullName}} {{field.Name}}
+            public {{staticOrEmpty}}{{field.TypeFullNameWithNullableSupport}} {{field.Name}}
             {
             """);
         indentedWriter.Indent++;
@@ -283,16 +284,17 @@ internal class PublicizerSourceGenerator : ISourceGenerator
 
         var parameterNames = method.GetParameterNames().ToImmutableList();
         var parameterTypesFullNames = method.GetParameterTypesFullNames().ToImmutableArray();
+        var parameterTypesFullNamesWithNullableSupport = method.GetParameterTypesFullNamesWithNullableSupport().ToImmutableArray();
 
-        var parametersSignatureText = string.Join(", ", parameterTypesFullNames.Zip(parameterNames, (parameterTypeFullName, parameterName) => $"{parameterTypeFullName} {parameterName}"));
+        var parametersSignatureText = string.Join(", ", parameterTypesFullNamesWithNullableSupport.Zip(parameterNames, (parameterTypeFullName, parameterName) => $"{parameterTypeFullName} {parameterName}"));
         var parametersTypeOfText = string.Join(", ", parameterTypesFullNames.Select(parameterTypeFullName => $"typeof({parameterTypeFullName})"));
-        var parametersTypeXmlDocText = string.Join(", ", parameterTypesFullNames);
+        var parametersTypeXmlDocText = string.Join(", ", parameterTypesFullNamesWithNullableSupport);
 
         indentedWriter.WriteMultiLine($"""
             /// <summary>
             /// Forwards to method <see cref="{method.FullName}({parametersTypeXmlDocText})"/>.
             /// </summary>
-            public {staticOrEmpty}{method.ReturnTypeFullName} {method.Name}({parametersSignatureText}) =>
+            public {staticOrEmpty}{method.ReturnTypeFullNameWithNullableSupport} {method.Name}({parametersSignatureText}) =>
             """);
         indentedWriter.Indent++;
 
@@ -317,7 +319,7 @@ internal class PublicizerSourceGenerator : ISourceGenerator
             var parametersInvocationText = string.Join(", ", parameterNames);
 
             if (!method.Symbol.ReturnsVoid)
-                indentedWriter.Write($"({method.ReturnTypeFullName}) ");
+                indentedWriter.Write($"({method.ReturnTypeFullNameWithNullableSupport}) ");
 
             indentedWriter.WriteMultiLine($$"""
                 {{namer.MemberAccessorInstanceText}}.InvokeMethod({{namer.GetMethodInfoName(method)}}, {{namer.GetInstanceText(method)}}, new object[] { {{parametersInvocationText}} });
@@ -346,8 +348,8 @@ internal class PublicizerSourceGenerator : ISourceGenerator
             var valueInfoName = namer.GetValueInfoName(value);
 
             var genericParametersText = value.IsStatic
-                ? value.TypeFullName
-                : $"{value.ContainingTypeFullName}, {value.TypeFullName}";
+                ? value.TypeFullNameWithNullableSupport
+                : $"{value.ContainingTypeFullName}, {value.TypeFullNameWithNullableSupport}";
 
             if (isGet)
             {
@@ -391,7 +393,7 @@ internal class PublicizerSourceGenerator : ISourceGenerator
         if (namer.MemberAccessorInstanceText is null)
         {
             var methodInfoName = namer.GetMethodInfoName(method);
-            var genericParameterTypes = method.GetParameterTypesFullNames().ToList();
+            var genericParameterTypes = method.GetParameterTypesFullNamesWithNullableSupport().ToList();
 
             if (!method.IsStatic)
                 genericParameterTypes.Insert(0, method.ContainingTypeFullName);
@@ -399,7 +401,7 @@ internal class PublicizerSourceGenerator : ISourceGenerator
             useTypelessDelegate = genericParameterTypes.Count > 16;
 
             if (!method.ReturnsVoid)
-                genericParameterTypes.Add(method.ReturnTypeFullName);
+                genericParameterTypes.Add(method.ReturnTypeFullNameWithNullableSupport);
 
             var invokeTypeFullName = useTypelessDelegate
                 ? $"global::{typeof(Delegate).FullName}"
@@ -445,7 +447,7 @@ internal class PublicizerSourceGenerator : ISourceGenerator
         else
         {
             if (isGet)
-                indentedWriter.WriteLine($"get => ({value.TypeFullName}) {namer.MemberAccessorInstanceText}.GetValue({namer.GetValueInfoName(value)}, {namer.GetInstanceText(value)});");
+                indentedWriter.WriteLine($"get => ({value.TypeFullNameWithNullableSupport}) {namer.MemberAccessorInstanceText}.GetValue({namer.GetValueInfoName(value)}, {namer.GetInstanceText(value)});");
             else
                 indentedWriter.WriteLine($"set => {namer.MemberAccessorInstanceText}.SetValue({namer.GetValueInfoName(value)}, {namer.GetInstanceText(value)}, value);");
         }

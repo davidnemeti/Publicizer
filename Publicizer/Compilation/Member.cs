@@ -19,6 +19,17 @@ internal abstract class Member
     public string Name => Symbol.Name;
     public string FullName => $"{ContainingTypeFullName}.{Name}";
     public bool IsStatic => Symbol.IsStatic;
+
+    protected static string GetTypeFullName(ITypeSymbol type) => type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+
+    protected static string GetTypeFullNameWithNullableSupport(ITypeSymbol type)
+    {
+        var typeFullName = GetTypeFullName(type);
+
+        return type.NullableAnnotation == NullableAnnotation.Annotated && !typeFullName.EndsWith("?")
+            ? $"{typeFullName}?"
+            : typeFullName;
+    }
 }
 
 internal sealed class Method : Member
@@ -32,9 +43,11 @@ internal sealed class Method : Member
 
     public ITypeSymbol ReturnType => Symbol.ReturnType;
     public bool ReturnsVoid => Symbol.ReturnsVoid;
-    public string ReturnTypeFullName => ReturnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+    public string ReturnTypeFullName => GetTypeFullName(ReturnType);
+    public string ReturnTypeFullNameWithNullableSupport => GetTypeFullNameWithNullableSupport(ReturnType);
 
-    public IEnumerable<string> GetParameterTypesFullNames() => Symbol.Parameters.Select(parameter => parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+    public IEnumerable<string> GetParameterTypesFullNames() => Symbol.Parameters.Select(parameter => GetTypeFullName(parameter.Type));
+    public IEnumerable<string> GetParameterTypesFullNamesWithNullableSupport() => Symbol.Parameters.Select(parameter => GetTypeFullNameWithNullableSupport(parameter.Type));
     public IEnumerable<string> GetParameterNames() => Symbol.Parameters.Select(parameter => parameter.Name);
 }
 
@@ -49,7 +62,8 @@ internal abstract class Value : Member
     public abstract bool CanRead { get; }
     public abstract bool CanWrite { get; }
 
-    public string TypeFullName => Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+    public string TypeFullName => GetTypeFullName(Type);
+    public string TypeFullNameWithNullableSupport => GetTypeFullNameWithNullableSupport(Type);
 
     public TResult Select<TResult>(Func<Field, TResult> fieldSelector, Func<Property, TResult> propertySelector) =>
         this switch

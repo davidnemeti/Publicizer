@@ -3,17 +3,20 @@ using NamespaceForOtherTypes;
 
 namespace NamespaceForTypeWithPrivateMembers;
 
+#pragma warning disable CS0169 // The field '***' is never used
+#pragma warning disable CS0414 // The field '***' is assigned but its value is never used
+
 public class TypeWithPrivateMembers
 {
-#pragma warning disable CS0169 // The field 'TypeWithPrivateMembers._readonlyField' is never used
     private static int StaticField;
-#pragma warning restore CS0169 // The field 'TypeWithPrivateMembers._readonlyField' is never used
     private static int StaticProperty { get; set; }
 
-#pragma warning disable CS0169 // The field 'TypeWithPrivateMembers._readonlyField' is never used
     private int _field;
+    private int? _nullableValueField;
+    private Nullable<int> _nullableValueField2;
+    private string? _nullableReferenceField;
+    private string _nonNullableReferenceField = "hello world";
     private readonly int _readonlyField;
-#pragma warning restore CS0169 // The field 'TypeWithPrivateMembers._readonlyField' is never used
     private OtherType _complexField = new OtherType(0);
     private int _readonlyProperty { get; }
     private int _property { get; set; }
@@ -90,6 +93,12 @@ public class TypeWithPrivateMembers
     {
         StaticLogger.Log();
         return $"{a}, {otherType.Number}";
+    }
+
+    private string? FunctionWithNullableTypes(int? a, Nullable<int> b, string? text)
+    {
+        StaticLogger.Log();
+        return $"{a}, {text}";
     }
 
     private void ProcedureWith15Parameters(int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11, int a12, int a13, int a14, int a15)

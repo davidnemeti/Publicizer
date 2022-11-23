@@ -8,7 +8,7 @@ namespace Publicizer.Compilation;
 
 internal class Namer
 {
-    private static readonly Regex s_illegalCharacterMatcher = new Regex(@"[:.<>]");
+    private static readonly Regex s_illegalCharacterMatcher = new Regex(@"[:.<>?]");
 
     private readonly INamedTypeSymbol _proxyTypeSymbol;
     private readonly INamedTypeSymbol _typeSymbolToPublicize;
