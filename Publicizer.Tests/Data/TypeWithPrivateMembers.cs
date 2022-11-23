@@ -18,6 +18,14 @@ public class TypeWithPrivateMembers
     private int _readonlyProperty { get; }
     private int _property { get; set; }
 
+    public TypeWithPrivateMembers()
+    {
+    }
+
+    public TypeWithPrivateMembers(int dummy)
+    {
+    }
+
     private static void StaticProcedure()
     {
         StaticLogger.Log();

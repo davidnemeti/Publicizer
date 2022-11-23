@@ -16,15 +16,50 @@ namespace Publicizer.Compilation;
 [Generator]
 internal class PublicizerSourceGenerator : ISourceGenerator
 {
+    private class WrongProxyTypeKindException : Exception
+    {
+        public INamedTypeSymbol ProxyTypeSymbol { get; }
+
+        public WrongProxyTypeKindException(INamedTypeSymbol proxyTypeSymbol)
+        {
+            ProxyTypeSymbol = proxyTypeSymbol;
+        }
+    }
+
+    private static readonly ImmutableDictionary<TypeKind, string> typeKindToText = new Dictionary<TypeKind, string>
+    {
+        [TypeKind.Class] = "class",
+        [TypeKind.Struct] = "struct",
+    }
+        .ToImmutableDictionary();
+
+    private static readonly DiagnosticDescriptor WrongProxyTypeKind = new
+    (
+        id: "PUB001",
+        title: "Wrong proxy type kind",
+        messageFormat: $$"""Proxy type '{0}' can only be a {{string.Join(" or ", typeKindToText.Values)}}.""",
+        category: "Publicizer",
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
     public void Execute(GeneratorExecutionContext context)
     {
         var publicizerSyntaxContextReceiver = (PublicizerSyntaxContextReceiver)context.SyntaxContextReceiver!;
 
         foreach (var (proxyTypeSymbol, publicizeAttributeDatas) in publicizerSyntaxContextReceiver.Proxies)
         {
-            var publicizeAttributeData = publicizeAttributeDatas.Single();
+            try
+            {
+                var publicizeAttributeData = publicizeAttributeDatas.Single();
 
-            context.AddSource($"{proxyTypeSymbol.Name}.g.cs", SourceText.From(GenerateSource(proxyTypeSymbol, publicizeAttributeData), Encoding.UTF8));
+                var source = GenerateSource(proxyTypeSymbol, publicizeAttributeData);
+                context.AddSource($"{proxyTypeSymbol.Name}.g.cs", SourceText.From(source, Encoding.UTF8));
+            }
+            catch (WrongProxyTypeKindException)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(WrongProxyTypeKind, proxyTypeSymbol.Locations[0], proxyTypeSymbol.Name));
+            }
         }
     }
 
@@ -73,9 +108,12 @@ internal class PublicizerSourceGenerator : ISourceGenerator
         if (memberLifetime.HasFlag(MemberLifetime.Instance))
             indentedWriter.WriteLine($"/// Private instance members can be accessed through public instance members of the proxy type, thus the proxy type needs to be instantiated.");
 
+        if (!typeKindToText.TryGetValue(proxyTypeSymbol.TypeKind, out var typeKindText))
+            throw new WrongProxyTypeKindException(proxyTypeSymbol);
+
         indentedWriter.WriteMultiLine($$"""
             /// </summary>
-            public partial class {{proxyTypeSymbol.Name}}
+            partial {{typeKindText}} {{proxyTypeSymbol.Name}}
             {
             """);
         indentedWriter.Indent++;
@@ -117,6 +155,8 @@ internal class PublicizerSourceGenerator : ISourceGenerator
             .Where(field => field.AssociatedSymbol is IPropertySymbol)
             .ToImmutableDictionary(field => (IPropertySymbol)field.AssociatedSymbol!, (IEqualityComparer<IPropertySymbol>)SymbolEqualityComparer.Default);
 
+        var constructors = typeSymbolToPublicize.Constructors.ToImmutableHashSet((IEqualityComparer<IMethodSymbol>)SymbolEqualityComparer.Default);
+
         foreach (var memberSymbol in typeSymbolToPublicize.GetMembers())
         {
             if (!MatchMemberLifetime(memberSymbol, memberLifetime) || !MatchMemberVisibility(memberSymbol, memberVisibility))
@@ -134,7 +174,7 @@ internal class PublicizerSourceGenerator : ISourceGenerator
                     GenerateField(indentedWriter, namer, new Value.Field(fieldSymbol), accessorHandling);
                     break;
 
-                case IMethodSymbol methodSymbol when !methodSymbol.IsImplicitlyDeclared && !methodSymbolsForProperties.Contains(methodSymbol):
+                case IMethodSymbol methodSymbol when !constructors.Contains(methodSymbol) && !methodSymbol.IsImplicitlyDeclared && !methodSymbolsForProperties.Contains(methodSymbol):
                     indentedWriter.WriteLine();
                     GenerateMethod(indentedWriter, namer, new Method(methodSymbol));
                     break;
