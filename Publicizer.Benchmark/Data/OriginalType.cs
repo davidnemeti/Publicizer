@@ -13,14 +13,17 @@ public class OriginalType
 
     public static void StaticProcedure()
     {
+        StaticField = 3;    // at least do something
     }
 
     public static void StaticProcedureWith16Parameters(int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11, int a12, int a13, int a14, int a15, int a16)
     {
+        StaticField = a3;    // at least do something
     }
 
     public static void StaticProcedureWith17Parameters(int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11, int a12, int a13, int a14, int a15, int a16, int a17)
     {
+        StaticField = a3;    // at least do something
     }
 
     public static string StaticFunction()
@@ -40,6 +43,7 @@ public class OriginalType
 
     public void Procedure()
     {
+        Field = 3;      // at least do something
     }
 
     public string Function()
@@ -49,6 +53,7 @@ public class OriginalType
 
     public void Procedure(int a)
     {
+        Field = a;      // at least do something
     }
 
     public string Function(int a)
@@ -58,6 +63,7 @@ public class OriginalType
 
     public void Procedure(int a, OtherType otherType)
     {
+        Field = a;      // at least do something
     }
 
     public string Function(int a, OtherType otherType)
@@ -67,10 +73,12 @@ public class OriginalType
 
     public void ProcedureWith15Parameters(int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11, int a12, int a13, int a14, int a15)
     {
+        Field = a3;      // at least do something
     }
 
     public void ProcedureWith16Parameters(int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11, int a12, int a13, int a14, int a15, int a16)
     {
+        Field = a3;      // at least do something
     }
 
     public string FunctionWith15Parameters(int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11, int a12, int a13, int a14, int a15)
