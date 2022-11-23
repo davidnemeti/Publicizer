@@ -73,7 +73,7 @@ namespace Publicizer.Annotation
         ForceWriteOnReadonly = 1 << 1,
 
         /// <summary>
-        /// Writeonly fields and writeonly auto-implemented properties will be readable through the proxy.
+        /// Writeonly auto-implemented properties will be readable through the proxy.
         /// </summary>
         ForceReadOnWriteonly = 1 << 2,
 
