@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Publicizer.Benchmark", "Pub
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Publicizer.Tests", "Publicizer.Tests\Publicizer.Tests.csproj", "{8940A599-15F9-484F-BF83-5FB9946B19D8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Publicizer.CompileTest", "Publicizer.CompileTest\Publicizer.CompileTest.csproj", "{B10BB354-2DFF-4CDC-B85E-D418129DD6FB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Publicizer.CompileTest", "Publicizer.CompileTest\Publicizer.CompileTest.csproj", "{B10BB354-2DFF-4CDC-B85E-D418129DD6FB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,7 +22,9 @@ Global
 		{19AF346D-A2F1-470E-BD55-5784A46AC99C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{19AF346D-A2F1-470E-BD55-5784A46AC99C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5E1B77A3-57D4-4FEC-A459-9DCC8044E127}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E1B77A3-57D4-4FEC-A459-9DCC8044E127}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5E1B77A3-57D4-4FEC-A459-9DCC8044E127}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E1B77A3-57D4-4FEC-A459-9DCC8044E127}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8940A599-15F9-484F-BF83-5FB9946B19D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8940A599-15F9-484F-BF83-5FB9946B19D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8940A599-15F9-484F-BF83-5FB9946B19D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
