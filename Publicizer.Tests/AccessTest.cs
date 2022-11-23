@@ -180,6 +180,30 @@ public abstract class AccessTest<TForcedProxy, TForcedProxyStatic>
     }
 
     [Fact]
+    public void StaticProcedureInvocationWith16Parameters()
+    {
+        StaticProxy.StaticProcedureWith16Parameters(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+
+        Assert.Collection(StaticLogger.LoggedMethods, method =>
+        {
+            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
+            Assert.Equal($"Void StaticProcedureWith16Parameters({string.Join(", ", Enumerable.Range(1, 16).Select(i => "Int32"))})", method.ToString());
+        });
+    }
+
+    [Fact]
+    public void StaticProcedureInvocationWith17Parameters()
+    {
+        StaticProxy.StaticProcedureWith17Parameters(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17);
+
+        Assert.Collection(StaticLogger.LoggedMethods, method =>
+        {
+            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
+            Assert.Equal($"Void StaticProcedureWith17Parameters({string.Join(", ", Enumerable.Range(1, 17).Select(i => "Int32"))})", method.ToString());
+        });
+    }
+
+    [Fact]
     public void StaticFunctionInvocation()
     {
         var result = StaticProxy.StaticFunction();
@@ -193,6 +217,32 @@ public abstract class AccessTest<TForcedProxy, TForcedProxyStatic>
     }
 
     [Fact]
+    public void StaticFunctionInvocationWith16Parameters()
+    {
+        var result = StaticProxy.StaticFunctionWith16Parameters(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+
+        Assert.Equal(136, result);
+        Assert.Collection(StaticLogger.LoggedMethods, method =>
+        {
+            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
+            Assert.Equal($"Int32 StaticFunctionWith16Parameters({string.Join(", ", Enumerable.Range(1, 16).Select(i => "Int32"))})", method.ToString());
+        });
+    }
+
+    [Fact]
+    public void StaticFunctionInvocationWith17Parameters()
+    {
+        var result = StaticProxy.StaticFunctionWith17Parameters(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17);
+
+        Assert.Equal(153, result);
+        Assert.Collection(StaticLogger.LoggedMethods, method =>
+        {
+            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
+            Assert.Equal($"Int32 StaticFunctionWith17Parameters({string.Join(", ", Enumerable.Range(1, 17).Select(i => "Int32"))})", method.ToString());
+        });
+    }
+
+    [Fact]
     public void ProcedureInvocation()
     {
         Proxy.Procedure();
@@ -201,6 +251,54 @@ public abstract class AccessTest<TForcedProxy, TForcedProxyStatic>
         {
             Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
             Assert.Equal("Void Procedure()", method.ToString());
+        });
+    }
+
+    [Fact]
+    public void ProcedureInvocationWith1Parameter()
+    {
+        Proxy.Procedure(5);
+
+        Assert.Collection(StaticLogger.LoggedMethods, method =>
+        {
+            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
+            Assert.Equal("Void Procedure(Int32)", method.ToString());
+        });
+    }
+
+    [Fact]
+    public void ProcedureInvocationWith2Parameters()
+    {
+        Proxy.Procedure(5, new OtherType(8));
+
+        Assert.Collection(StaticLogger.LoggedMethods, method =>
+        {
+            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
+            Assert.Equal("Void Procedure(Int32, NamespaceForOtherTypes.OtherType)", method.ToString());
+        });
+    }
+
+    [Fact]
+    public void ProcedureInvocationWith15Parameters()
+    {
+        Proxy.ProcedureWith15Parameters(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+
+        Assert.Collection(StaticLogger.LoggedMethods, method =>
+        {
+            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
+            Assert.Equal($"Void ProcedureWith15Parameters({string.Join(", ", Enumerable.Range(1, 15).Select(i => "Int32"))})", method.ToString());
+        });
+    }
+
+    [Fact]
+    public void ProcedureInvocationWith16Parameters()
+    {
+        Proxy.ProcedureWith16Parameters(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+
+        Assert.Collection(StaticLogger.LoggedMethods, method =>
+        {
+            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
+            Assert.Equal($"Void ProcedureWith16Parameters({string.Join(", ", Enumerable.Range(1, 16).Select(i => "Int32"))})", method.ToString());
         });
     }
 
@@ -218,19 +316,7 @@ public abstract class AccessTest<TForcedProxy, TForcedProxyStatic>
     }
 
     [Fact]
-    public void ProcedureInvocationWithOneParameter()
-    {
-        Proxy.Procedure(5);
-
-        Assert.Collection(StaticLogger.LoggedMethods, method =>
-        {
-            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
-            Assert.Equal("Void Procedure(Int32)", method.ToString());
-        });
-    }
-
-    [Fact]
-    public void FunctionInvocationWithOneParameter()
+    public void FunctionInvocationWith1Parameter()
     {
         var result = Proxy.Function(5);
 
@@ -243,19 +329,7 @@ public abstract class AccessTest<TForcedProxy, TForcedProxyStatic>
     }
 
     [Fact]
-    public void ProcedureInvocationWithTwoParameter()
-    {
-        Proxy.Procedure(5, new OtherType(8));
-
-        Assert.Collection(StaticLogger.LoggedMethods, method =>
-        {
-            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
-            Assert.Equal("Void Procedure(Int32, NamespaceForOtherTypes.OtherType)", method.ToString());
-        });
-    }
-
-    [Fact]
-    public void FunctionInvocationWithTwoParameter()
+    public void FunctionInvocationWith2Parameters()
     {
         var result = Proxy.Function(5, new OtherType(8));
 
@@ -264,6 +338,32 @@ public abstract class AccessTest<TForcedProxy, TForcedProxyStatic>
         {
             Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
             Assert.Equal("System.String Function(Int32, NamespaceForOtherTypes.OtherType)", method.ToString());
+        });
+    }
+
+    [Fact]
+    public void FunctionInvocationWith15Parameters()
+    {
+        var result = Proxy.FunctionWith15Parameters(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+
+        Assert.Equal(120, result);
+        Assert.Collection(StaticLogger.LoggedMethods, method =>
+        {
+            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
+            Assert.Equal($"Int32 FunctionWith15Parameters({string.Join(", ", Enumerable.Range(1, 15).Select(i => "Int32"))})", method.ToString());
+        });
+    }
+
+    [Fact]
+    public void FunctionInvocationWith16Parameters()
+    {
+        var result = Proxy.FunctionWith16Parameters(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+
+        Assert.Equal(136, result);
+        Assert.Collection(StaticLogger.LoggedMethods, method =>
+        {
+            Assert.Equal(typeof(TypeWithPrivateMembers), method.DeclaringType);
+            Assert.Equal($"Int32 FunctionWith16Parameters({string.Join(", ", Enumerable.Range(1, 16).Select(i => "Int32"))})", method.ToString());
         });
     }
 
