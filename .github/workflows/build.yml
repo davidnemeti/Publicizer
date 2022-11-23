@@ -29,7 +29,8 @@ jobs:
     - name: Build
       run: dotnet build --no-restore --configuration Release
     - name: Test
-      run: dotnet test --no-build --verbosity normal --configuration Release
+      run: dotnet test --verbosity normal
+      #run: dotnet test --no-build --verbosity normal --configuration Release
     - name: Publish NuGet package to nuget.org
       if: ${{ inputs.publish_nuget }}
       run: dotnet nuget push "./Publicizer/bin/Release/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_ORG_API_KEY }}
