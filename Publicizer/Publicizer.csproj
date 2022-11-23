@@ -1,30 +1,46 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!--
+      As of 2022 November, source generator projects cannot be multitarget project; it can only be a .NET Standard 2.0 project.
+      In order to properly access IL emitting AssemblyBuilder and DynamicMethod classes without using any nuget packages, we would like here
+        <TargetFrameworks>net48;net6.0</TargetFrameworks>
+      instead of
+        <TargetFramework>netstandard2.0</TargetFramework>
+    -->
     <TargetFramework>netstandard2.0</TargetFramework>
-    <LangVersion>10.0</LangVersion>
+    <LangVersion>11.0</LangVersion>
     <Nullable>enable</Nullable>
+    <DefineConstants>IS_INSIDE_PUBLICIZER</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Version>1.0.3</Version>
+    <Version>2.0.0</Version>
     <Authors>Dávid Németi</Authors>
     <Description>Access private members with compile-time safety.</Description>
     <PackageTags>SourceGenerator;Reflection;PrivateMembers;Typesafety;CompileTimeSafety;Proxy</PackageTags>
     <PackageLicenseExpression>LGPL-3.0-only</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/davidnemeti/Publicizer</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-
-    <!--
-      We want to include the build output as a lib dependency, because although we do not need the source generator during runtime, however we do need the attribute.
-      Thus, we do not apply the following:
-      <IncludeBuildOutput>false</IncludeBuildOutput>
-    -->
+    <DevelopmentDependency>true</DevelopmentDependency>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- NOTE: MemberInfoHelpersContent uses API which is not available in .NET Standard 2.0, so we need to remove it from Compile item list -->
+    <Compile Remove="Runtime\MemberInfoHelpersContent.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Annotation\**\*.cs" BuildAction="Compile" />
+    <Content Include="Runtime\**\*.cs" BuildAction="Compile" />
+  </ItemGroup>
 
   <ItemGroup>
     <!-- Package the generator in the analyzer directory of the nuget package -->
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <None Include="..\README.md" Pack="true" PackagePath="\"/>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>

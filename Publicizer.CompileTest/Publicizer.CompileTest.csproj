@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net48;netstandard2.1;net5.0;net6.0;net7.0</TargetFrameworks>
+    <NoWarn>NETSDK1138</NoWarn>
+    <Nullable>enable</Nullable>
+    <LangVersion Condition=" '$(TargetFramework)' == 'net48'">8.0</LangVersion>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Publicizer\Publicizer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <!-- NOTE: when PackageReference is being used, then Annotation and Runtime files are being included automatically, but here we need to include them manually. -->
+    <Compile Include="..\Publicizer\Annotation\**\*.cs">
+      <Link>Annotation\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="..\Publicizer\Runtime\**\*.cs">
+      <Link>Runtime\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+  </ItemGroup>
+
+</Project>
