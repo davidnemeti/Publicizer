@@ -398,9 +398,9 @@ internal class PublicizerSourceGenerator : ISourceGenerator
         else
         {
             if (isGet)
-                indentedWriter.WriteLine($"get => {namer.MemberAccessorInstanceText}.GetValue<{value.TypeFullName}>({namer.GetValueInfoName(value)}, {namer.GetInstanceText(value)});");
+                indentedWriter.WriteLine($"get => ({value.TypeFullName}) {namer.MemberAccessorInstanceText}.GetValue({namer.GetValueInfoName(value)}, {namer.GetInstanceText(value)});");
             else
-                indentedWriter.WriteLine($"set => {namer.MemberAccessorInstanceText}.SetValue<{value.TypeFullName}>({namer.GetValueInfoName(value)}, {namer.GetInstanceText(value)}, value);");
+                indentedWriter.WriteLine($"set => {namer.MemberAccessorInstanceText}.SetValue({namer.GetValueInfoName(value)}, {namer.GetInstanceText(value)}, value);");
         }
     }
 

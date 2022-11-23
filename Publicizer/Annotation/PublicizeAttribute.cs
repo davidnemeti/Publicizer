@@ -1,13 +1,14 @@
-﻿// NOTE: This file will be included in the receiver project as source code, so we disable nullable warning context when used from the receiver project,
-// because nullable behavior changes too frequently between different .NET versions, and we do not want this code to fail at compile time due to nullable problems.
-// Also, we should avoid using the newest C# language features, if they are not necessary (like "file-scoped namespace").
-#if !NULLABLE_CHECK_FOR_INCLUDED_CODE
+﻿// NOTE: This file will be included in the receiver project as source code, so we disable nullable warning context, because nullable behavior is changing too frequently
+// between consecutive .NET versions, and we do not want this code to fail at compile time due to nullable problems.
+// Also, we should avoid using the newest C# language features (like "file-scoped namespace"), unless they are necessary or extremely useful.
+
+#if !IS_INSIDE_PUBLICIZER
 #nullable enable annotations
 #nullable disable warnings
 #endif
 
-using Publicizer.Runtime;
 using System;
+using Publicizer.Runtime;
 
 namespace Publicizer.Annotation
 {
@@ -43,8 +44,8 @@ namespace Publicizer.Annotation
         public AccessorHandling AccessorHandling { get; set; } = DefaultAccessorHandling;
 
         /// <summary>
-        /// Optional member accessor type which implements <see cref="IMemberAccessor{T}"/> where the <c>T</c> generic parameter is <see cref="TypeToPublicize"/>.
-        /// If missing, then the default <see cref="ReflectionMemberAccessor{T}"/> will be used.
+        /// Optional member accessor type which implements <see cref="IMemberAccessor"/>.
+        /// If missing, then the default compiled expression tree generation will be used, which is very fast.
         /// </summary>
         public Type? CustomMemberAccessorType { get; set; }
 

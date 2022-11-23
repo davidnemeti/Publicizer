@@ -29,7 +29,7 @@ internal class Namer
             : null;
 
         MemberAccessorInstanceText = customMemberAccessorTypeSymbol is not null
-            ? ToGeneratedName(nameof(IMemberAccessor<object>))
+            ? ToGeneratedName(nameof(IMemberAccessor))
             : null;
 
         InstanceToPublicizeName = memberLifetime.HasFlag(MemberLifetime.Instance)

@@ -1,7 +1,8 @@
-﻿// NOTE: This file will be included in the receiver project as source code, so we disable nullable warning context when used from the receiver project,
-// because nullable behavior changes too frequently between different .NET versions, and we do not want this code to fail at compile time due to nullable problems.
-// Also, we should avoid using the newest C# language features, if they are not necessary (like "file-scoped namespace").
-#if !NULLABLE_CHECK_FOR_INCLUDED_CODE
+﻿// NOTE: This file will be included in the receiver project as source code, so we disable nullable warning context, because nullable behavior is changing too frequently
+// between consecutive .NET versions, and we do not want this code to fail at compile time due to nullable problems.
+// Also, we should avoid using the newest C# language features (like "file-scoped namespace"), unless they are necessary or extremely useful.
+
+#if !IS_INSIDE_PUBLICIZER
 #nullable enable annotations
 #nullable disable warnings
 #endif
@@ -29,7 +30,7 @@ namespace Publicizer.Runtime
                 returnType: null,
                 parameterTypes: fieldInfo.IsStatic
                     ? new Type[] { fieldInfo.FieldType }
-                    : new Type[] { fieldInfo.ReflectedType!, fieldInfo.FieldType },
+                    : new Type[] { fieldInfo.ReflectedType, fieldInfo.FieldType },
                 moduleBuilder,
                 skipVisibility: true
             );
