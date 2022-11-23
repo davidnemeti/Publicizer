@@ -13,4 +13,9 @@ namespace Publicizer.Tests.Data
     public partial struct StructProxy
     {
     }
+
+    [Publicize(typeof(TypeWithPrivateMembers))]
+    public partial record RecordProxy
+    {
+    }
 }

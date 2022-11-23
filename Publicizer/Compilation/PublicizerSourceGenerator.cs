@@ -19,25 +19,21 @@ internal class PublicizerSourceGenerator : ISourceGenerator
     private class WrongProxyTypeKindException : Exception
     {
         public INamedTypeSymbol ProxyTypeSymbol { get; }
+        public string DiagnosticMessage { get; }
 
-        public WrongProxyTypeKindException(INamedTypeSymbol proxyTypeSymbol)
+        public WrongProxyTypeKindException(INamedTypeSymbol proxyTypeSymbol, string diagnosticMessage)
+            : base(diagnosticMessage)
         {
             ProxyTypeSymbol = proxyTypeSymbol;
+            DiagnosticMessage = diagnosticMessage;
         }
     }
-
-    private static readonly ImmutableDictionary<TypeKind, string> typeKindToText = new Dictionary<TypeKind, string>
-    {
-        [TypeKind.Class] = "class",
-        [TypeKind.Struct] = "struct",
-    }
-        .ToImmutableDictionary();
 
     private static readonly DiagnosticDescriptor WrongProxyTypeKind = new
     (
         id: "PUB001",
         title: "Wrong proxy type kind",
-        messageFormat: $$"""Proxy type '{0}' can only be a {{string.Join(" or ", typeKindToText.Values)}}.""",
+        messageFormat: "{0}",
         category: "Publicizer",
         DiagnosticSeverity.Error,
         isEnabledByDefault: true
@@ -56,9 +52,9 @@ internal class PublicizerSourceGenerator : ISourceGenerator
                 var source = GenerateSource(proxyTypeSymbol, publicizeAttributeData);
                 context.AddSource($"{proxyTypeSymbol.Name}.g.cs", SourceText.From(source, Encoding.UTF8));
             }
-            catch (WrongProxyTypeKindException)
+            catch (WrongProxyTypeKindException ex)
             {
-                context.ReportDiagnostic(Diagnostic.Create(WrongProxyTypeKind, proxyTypeSymbol.Locations[0], proxyTypeSymbol.Name));
+                context.ReportDiagnostic(Diagnostic.Create(WrongProxyTypeKind, proxyTypeSymbol.Locations[0], ex.DiagnosticMessage));
             }
         }
     }
@@ -108,8 +104,7 @@ internal class PublicizerSourceGenerator : ISourceGenerator
         if (memberLifetime.HasFlag(MemberLifetime.Instance))
             indentedWriter.WriteLine($"/// Private instance members can be accessed through public instance members of the proxy type, thus the proxy type needs to be instantiated.");
 
-        if (!typeKindToText.TryGetValue(proxyTypeSymbol.TypeKind, out var typeKindText))
-            throw new WrongProxyTypeKindException(proxyTypeSymbol);
+        var typeKindText = GetTypeKindText(proxyTypeSymbol);
 
         indentedWriter.WriteMultiLine($$"""
             /// </summary>
@@ -183,6 +178,18 @@ internal class PublicizerSourceGenerator : ISourceGenerator
 
         indentedWriter.Indent--;
         indentedWriter.WriteLine("}");
+    }
+
+    private static string GetTypeKindText(INamedTypeSymbol proxyTypeSymbol)
+    {
+        if (proxyTypeSymbol.IsRecord)
+            return "record";
+        else if (proxyTypeSymbol.TypeKind == TypeKind.Class)
+            return "class";
+        else if (proxyTypeSymbol.TypeKind == TypeKind.Struct)
+            return "struct";
+        else
+            throw new WrongProxyTypeKindException(proxyTypeSymbol, $"Proxy type '{proxyTypeSymbol.Name}' can only be a class, struct, or record.");
     }
 
     private static bool MatchMemberLifetime(ISymbol memberSymbol, MemberLifetime memberLifetime) =>
