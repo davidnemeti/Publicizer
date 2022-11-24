@@ -122,4 +122,32 @@ public class TypeWithPrivateMembers
         StaticLogger.Log();
         return a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10 + a11 + a12 + a13 + a14 + a15 + a16;
     }
+
+    private void GenericMethodWith1GenericParameter<T>()
+    {
+        StaticLogger.Log();
+    }
+
+    private void GenericMethodWith2GenericParameters<T1, T2>()
+    {
+        StaticLogger.Log();
+    }
+
+    private T GenericMethodWith1Parameter<T>(T t)
+    {
+        StaticLogger.Log();
+        return t;
+    }
+
+    private T1 GenericMethodWith2Parameters<T1, T2>(T1 t1, T2 t2)
+    {
+        StaticLogger.Log();
+        return t1;
+    }
+
+    private IEnumerable<T> GenericMethodWithComplexParameter<T>(IEnumerable<T> items)
+    {
+        StaticLogger.Log();
+        return items;
+    }
 }

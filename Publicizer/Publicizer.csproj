@@ -17,7 +17,7 @@
   <PropertyGroup>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Version>2.0.0</Version>
+    <Version>2.0.1</Version>
     <Authors>Dávid Németi</Authors>
     <Description>Access private members with compile-time safety.</Description>
     <PackageTags>SourceGenerator;ExpressionTree;Reflection;PrivateMembers;Typesafety;CompileTimeSafety;Proxy</PackageTags>

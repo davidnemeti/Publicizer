@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Publicizer.Annotation;
@@ -16,6 +17,14 @@ namespace Publicizer.Compilation;
 [Generator]
 internal class PublicizerSourceGenerator : ISourceGenerator
 {
+    private static readonly IImmutableDictionary<string, string> s_xmlCommentIllegalTextToLegal = new Dictionary<string, string>
+    {
+        ["<"] = "{",
+        [">"] = "}",
+    }.ToImmutableDictionary();
+
+    private static readonly Regex s_xmlCommentIllegalTextMatcher = new Regex($@"({string.Join("|", s_xmlCommentIllegalTextToLegal.Keys)})");
+
     private class WrongProxyTypeKindException : Exception
     {
         public INamedTypeSymbol ProxyTypeSymbol { get; }
@@ -66,6 +75,7 @@ internal class PublicizerSourceGenerator : ISourceGenerator
         {
             indentedWriter.WriteLine("#nullable enable annotations");
             indentedWriter.WriteLine("#nullable disable warnings");
+            indentedWriter.WriteLine("#pragma warning disable CS0114 // 'function1' hides inherited member 'function2'");
             indentedWriter.WriteLine();
 
             var typeSymbolToPublicize = (INamedTypeSymbol)publicizeAttributeData.ConstructorArguments[0].Value!;
@@ -277,6 +287,10 @@ internal class PublicizerSourceGenerator : ISourceGenerator
 
     private void GenerateMethod(IndentedTextWriter indentedWriter, Namer namer, Method method)
     {
+        // TODO: we cannot handle generic methods yet
+        if (method.Symbol.IsGenericMethod)
+            return;
+
         var staticOrEmpty = method.IsStatic ? "static " : string.Empty;
 
         GenerateMemberInfo(indentedWriter, namer, method);
@@ -288,7 +302,7 @@ internal class PublicizerSourceGenerator : ISourceGenerator
 
         var parametersSignatureText = string.Join(", ", parameterTypesFullNamesWithNullableSupport.Zip(parameterNames, (parameterTypeFullName, parameterName) => $"{parameterTypeFullName} {parameterName}"));
         var parametersTypeOfText = string.Join(", ", parameterTypesFullNames.Select(parameterTypeFullName => $"typeof({parameterTypeFullName})"));
-        var parametersTypeXmlDocText = string.Join(", ", parameterTypesFullNamesWithNullableSupport);
+        var parametersTypeXmlDocText = string.Join(", ", parameterTypesFullNamesWithNullableSupport.Select(ConvertToXmlCommentFriendly));
 
         indentedWriter.WriteMultiLine($"""
             /// <summary>
@@ -329,6 +343,8 @@ internal class PublicizerSourceGenerator : ISourceGenerator
         indentedWriter.Indent--;
     }
 
+    private static string ConvertToXmlCommentFriendly(string text) => s_xmlCommentIllegalTextMatcher.Replace(text, match => s_xmlCommentIllegalTextToLegal[match.Value]);
+
     private void GenerateMemberInfo(IndentedTextWriter indentedWriter, Namer namer, Value value)
     {
         var memberText = value.Select(field => "Field", property => "Property");
@@ -336,7 +352,11 @@ internal class PublicizerSourceGenerator : ISourceGenerator
         const BindingFlags bindingFlags = BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
         indentedWriter.WriteMultiLine($"""
-            private static readonly global::System.Reflection.{memberText}Info {valueInfoName} = typeof({value.ContainingTypeFullName}).Get{memberText}("{value.Name}", (global::{typeof(BindingFlags).FullName}){GetAsText(bindingFlags)});
+            private static readonly global::System.Reflection.{memberText}Info {valueInfoName} = typeof({value.ContainingTypeFullName})
+                .Get{memberText}(
+                    "{value.Name}",
+                    (global::{typeof(BindingFlags).FullName}){GetAsText(bindingFlags)}
+                );
 
             """);
     }
@@ -383,7 +403,14 @@ internal class PublicizerSourceGenerator : ISourceGenerator
         const BindingFlags bindingFlags = BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
         indentedWriter.WriteMultiLine($$"""
-            private static readonly global::{{typeof(MethodInfo).FullName}} {{methodInfoName}} = typeof({{method.ContainingTypeFullName}}).GetMethod("{{method.Name}}", (global::{{typeof(BindingFlags).FullName}}){{GetAsText(bindingFlags)}}, binder: null, new global::{{typeof(Type).FullName}}[] { {{parametersTypeOfText}} }, modifiers: null);
+            private static readonly global::{{typeof(MethodInfo).FullName}} {{methodInfoName}} = typeof({{method.ContainingTypeFullName}})
+                .GetMethod(
+                    "{{method.Name}}",
+                    (global::{{typeof(BindingFlags).FullName}}){{GetAsText(bindingFlags)}},
+                    binder: null,
+                    new global::{{typeof(Type).FullName}}[] { {{parametersTypeOfText}} },
+                    modifiers: null
+                );
 
             """);
     }
