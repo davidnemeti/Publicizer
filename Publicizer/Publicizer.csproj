@@ -17,7 +17,7 @@
   <PropertyGroup>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Version>2.0.1</Version>
+    <Version>2.0.2</Version>
     <Authors>Dávid Németi</Authors>
     <Description>Access private members with compile-time safety.</Description>
     <PackageTags>SourceGenerator;ExpressionTree;Reflection;PrivateMembers;Typesafety;CompileTimeSafety;Proxy</PackageTags>
@@ -33,8 +33,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Annotation\**\*.cs" BuildAction="Compile" />
-    <Content Include="Runtime\**\*.cs" BuildAction="Compile" />
+    <Content Include="Annotation\**\*.cs" BuildAction="Compile" PackagePath="contentFiles\cs\any\Publicizer\Annotation\%(RecursiveDir);content\Publicizer\Annotation\%(RecursiveDir)" />
+    <Content Include="Runtime\**\*.cs" BuildAction="Compile" PackagePath="contentFiles\cs\any\Publicizer\Runtime\%(RecursiveDir);content\Publicizer\Runtime\%(RecursiveDir)" />
   </ItemGroup>
 
   <ItemGroup>
