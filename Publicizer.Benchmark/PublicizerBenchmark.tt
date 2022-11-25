@@ -14,30 +14,31 @@ namespace Publicizer.Benchmark;
     var types = new []
     {
         "OriginalType",
-        "ForcedProxy",
-        "ForcedProxyWithCustomMemberAccessorType",
+        "ExpressionTreeProxy",
+        "ReflectionProxy",
     };
 
     foreach (var type in types)
     {
 #>
 
-[SimpleJob(runtimeMoniker: RuntimeMoniker.Net48)]
-[SimpleJob(runtimeMoniker: RuntimeMoniker.Net70)]
-public class PublicizerBenchmark_<#= type #>
+public class Benchmark_<#= type #>
 {
     private readonly <#= type #> Instance = new (<# if (type != "OriginalType") { #>new OriginalType()<# } #>);
 
     [Benchmark]
+    [BenchmarkCategory("FieldGet")]
     public int FieldGet() => Instance.Field;
 
     [Benchmark]
+    [BenchmarkCategory("FieldSet")]
     public void FieldSet()
     {
         Instance.Field = 5;
     }
 
     [Benchmark]
+    [BenchmarkCategory("ReadonlyFieldGet")]
     public int ReadonlyFieldGet() => Instance.ReadonlyField;
 
 <#
@@ -45,6 +46,7 @@ public class PublicizerBenchmark_<#= type #>
     {
 #>
     [Benchmark]
+    [BenchmarkCategory("ReadonlyFieldSet")]
     public void ReadonlyFieldSet()
     {
         Instance.ReadonlyField = 5;
@@ -54,24 +56,29 @@ public class PublicizerBenchmark_<#= type #>
     }
 #>
     [Benchmark]
+    [BenchmarkCategory("ComplexFieldGet")]
     public OtherType ComplexFieldGet() => Instance.ComplexField;
 
     [Benchmark]
+    [BenchmarkCategory("ComplexFieldSet")]
     public void ComplexFieldSet()
     {
         Instance.ComplexField = new OtherType(5);
     }
 
     [Benchmark]
+    [BenchmarkCategory("PropertyGet")]
     public int PropertyGet() => Instance.Property;
 
     [Benchmark]
+    [BenchmarkCategory("PropertySet")]
     public void PropertySet()
     {
         Instance.Property = 5;
     }
 
     [Benchmark]
+    [BenchmarkCategory("ReadonlyPropertyGet")]
     public int ReadonlyPropertyGet() => Instance.ReadonlyProperty;
 
 <#
@@ -79,6 +86,7 @@ public class PublicizerBenchmark_<#= type #>
     {
 #>
     [Benchmark]
+    [BenchmarkCategory("ReadonlyPropertySet")]
     public void ReadonlyPropertySet()
     {
         Instance.ReadonlyProperty = 5;
@@ -88,93 +96,113 @@ public class PublicizerBenchmark_<#= type #>
     }
 #>
     [Benchmark]
+    [BenchmarkCategory("StaticFieldGet")]
     public int StaticFieldGet() => <#= type #>.StaticField;
 
     [Benchmark]
+    [BenchmarkCategory("StaticFieldSet")]
     public void StaticFieldSet()
     {
         <#= type #>.StaticField = 5;
     }
 
     [Benchmark]
+    [BenchmarkCategory("StaticPropertyGet")]
     public int StaticPropertyGet() => <#= type #>.StaticProperty;
 
     [Benchmark]
+    [BenchmarkCategory("StaticPropertySet")]
     public void StaticPropertySet()
     {
         <#= type #>.StaticProperty = 5;
     }
 
     [Benchmark]
+    [BenchmarkCategory("StaticProcedureInvocation")]
     public void StaticProcedureInvocation()
     {
         <#= type #>.StaticProcedure();
     }
 
     [Benchmark]
+    [BenchmarkCategory("StaticProcedureInvocationWith16Parameters")]
     public void StaticProcedureInvocationWith16Parameters()
     {
         <#= type #>.StaticProcedureWith16Parameters(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
     }
 
     [Benchmark]
+    [BenchmarkCategory("StaticProcedureInvocationWith17Parameters")]
     public void StaticProcedureInvocationWith17Parameters()
     {
         <#= type #>.StaticProcedureWith17Parameters(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17);
     }
 
     [Benchmark]
+    [BenchmarkCategory("StaticFunctionInvocation")]
     public string StaticFunctionInvocation() => <#= type #>.StaticFunction();
 
     [Benchmark]
+    [BenchmarkCategory("StaticFunctionInvocationWith16Parameters")]
     public void StaticFunctionInvocationWith16Parameters() => <#= type #>.StaticFunctionWith16Parameters(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
 
     [Benchmark]
+    [BenchmarkCategory("StaticFunctionInvocationWith17Parameters")]
     public void StaticFunctionInvocationWith17Parameters() => <#= type #>.StaticFunctionWith17Parameters(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17);
 
     [Benchmark]
+    [BenchmarkCategory("ProcedureInvocation")]
     public void ProcedureInvocation()
     {
         Instance.Procedure();
     }
 
     [Benchmark]
+    [BenchmarkCategory("ProcedureInvocationWith1Parameter")]
     public void ProcedureInvocationWith1Parameter()
     {
         Instance.Procedure(5);
     }
 
     [Benchmark]
+    [BenchmarkCategory("ProcedureInvocationWith2Parameters")]
     public void ProcedureInvocationWith2Parameters()
     {
         Instance.Procedure(5, new OtherType(8));
     }
 
     [Benchmark]
+    [BenchmarkCategory("ProcedureInvocationWith15Parameters")]
     public void ProcedureInvocationWith15Parameters()
     {
         Instance.ProcedureWith15Parameters(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
     }
 
     [Benchmark]
+    [BenchmarkCategory("ProcedureInvocationWith16Parameters")]
     public void ProcedureInvocationWith16Parameters()
     {
         Instance.ProcedureWith16Parameters(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
     }
 
     [Benchmark]
+    [BenchmarkCategory("FunctionInvocation")]
     public string FunctionInvocation() => Instance.Function();
 
     [Benchmark]
+    [BenchmarkCategory("FunctionInvocationWith1Parameter")]
     public string FunctionInvocationWith1Parameter() => Instance.Function(5);
 
     [Benchmark]
+    [BenchmarkCategory("FunctionInvocationWith2Parameters")]
     public string FunctionInvocationWith2Parameters() => Instance.Function(5, new OtherType(8));
 
     [Benchmark]
+    [BenchmarkCategory("FunctionInvocationWith15Parameters")]
     public void FunctionInvocationWith15Parameters() => Instance.FunctionWith15Parameters(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
 
     [Benchmark]
+    [BenchmarkCategory("FunctionInvocationWith16Parameters")]
     public void FunctionInvocationWith16Parameters() => Instance.FunctionWith16Parameters(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
 }
 <#
